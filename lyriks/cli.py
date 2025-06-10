@@ -1,5 +1,7 @@
 import click
-from . import audio_processor, video_generator
+
+from .core import audio_processor
+from .core import video_generator
 from pathlib import Path
 
 @click.group()
