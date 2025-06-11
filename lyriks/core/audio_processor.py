@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Dict, Any
 
 class AudioProcessor:
-    def __init__(self, audio_file: Path, model_size="small", device="cpu"):
+    def __init__(self, audio_file: Path, model_size="tiny", device="cpu"):
         self.audio_file = audio_file
         self.audio = whisper.load_audio(audio_file)
         self.model = whisper.load_model(model_size, device=device)
