@@ -14,11 +14,14 @@ authors = [
 ]
 dependencies = [
     "click",
-    "openai-whisper",
-    "whisper-timestamped",
+    "demucs",
+    "langdetect",
     "onnxruntime",
+    "openai-whisper",
+    "soundfile",
+    "torch",
     "torchaudio",
-    "langdetect"
+    "whisper-timestamped"
 ]
 
 [project.urls]

@@ -1,3 +1,4 @@
+import os
 import click
 from pathlib import Path
 
@@ -23,8 +24,12 @@ def generate(audio_file, lyrics_file, output, model_size, device):
     from .core import video_generator    
     
     AudioProcessor = audio_processor.AudioProcessor(audio_file, lyrics_file, model_size, device)
+    vocals_path = AudioProcessor.isolate_vocals()
+    click.secho(f"Vocals Path: {vocals_path}", fg="green")
     transcript = AudioProcessor.transcribe()
     click.echo(transcript)
+    if os.path.exists(vocals_path):
+        os.remove(vocals_path)
 
 if __name__ == "__main__":
     main()
