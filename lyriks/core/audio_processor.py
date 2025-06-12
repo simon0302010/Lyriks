@@ -20,15 +20,13 @@ class AudioProcessor:
         click.secho(f"Detected language: {self.language}", fg="blue")
         self.device = device
         self.model_size = model_size
-        self.vocals_file = None
-        self.instrumental_file = None
 
     def transcribe(self):
         model = whisper.load_model(self.model_size, device=self.device)
         if self.vocals_file: self.audio = whisper.load_audio(self.vocals_file)
         else: self.audio = whisper.load_audio(self.audio_file)
-        result = whisper.transcribe(model, self.audio, self.language)
-        return result
+        self.transcript = whisper.transcribe(model, self.audio, self.language)
+        return self.transcript
     
     def isolate_vocals(self):
         output_dir = tempfile.mkdtemp()
@@ -47,6 +45,5 @@ class AudioProcessor:
         vocals_dir = Path(output_dir)
         self.vocals_file = str(vocals_dir / 'vocals.wav')
         sf.write(self.vocals_file, vocals, model.samplerate)
-        print(f"Saved vocals to: {self.vocals_file}")
 
         return self.vocals_file
