@@ -26,8 +26,18 @@ class AudioProcessor:
 
     def transcribe(self):
         model = whisper.load_model(self.model_size, device=self.device)
-        if self.vocals_file: audio = whisper.load_audio(self.vocals_file)
-        else: audio = whisper.load_audio(self.audio_file)
+        
+        # check which audios exist and choose one
+        if hasattr(self, 'no_silence_file') and self.no_silence_file:
+            audio = whisper.load_audio(self.no_silence_file)
+            self.used_silence_removed = True
+        elif self.vocals_file:
+            audio = whisper.load_audio(self.vocals_file)
+            self.used_silence_removed = False
+        else:
+            audio = whisper.load_audio(self.audio_file)
+            self.used_silence_removed = False
+        
         self.transcript = whisper.transcribe(model, audio, self.language)
         
         self.words = []
@@ -116,6 +126,10 @@ class AudioProcessor:
         return self.silent_parts, self.no_silence_file
     
     def map_words_to_original(self):
+        # only run function if silence has been removed
+        if not hasattr(self, 'used_silence_removed') or not self.used_silence_removed:
+            return self.words
+        
         mapping = []
         new_time = 0.0
         for orig_start, orig_end in self.non_silent_parts:
