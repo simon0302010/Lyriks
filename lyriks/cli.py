@@ -28,6 +28,7 @@ def generate(audio_file, lyrics_file, output, model_size, device):
     click.secho(f"Vocals Path: {vocals_path}", fg="green")
     AudioProcessor.remove_silence()
     transcript = AudioProcessor.transcribe()
+    print(AudioProcessor.map_words_to_original())
     if output:
         with open(output, "w") as f: f.write(str(transcript))
     if os.path.exists(vocals_path):

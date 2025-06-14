@@ -22,13 +22,19 @@ class AudioProcessor:
         self.device = device
         self.model_size = model_size
         self.vocals_file = None
-        self.temp_dir = tempfile.mkdtemp()
+        self.temp_dir = Path(tempfile.mkdtemp())
 
     def transcribe(self):
         model = whisper.load_model(self.model_size, device=self.device)
         if self.vocals_file: audio = whisper.load_audio(self.vocals_file)
         else: audio = whisper.load_audio(self.audio_file)
         self.transcript = whisper.transcribe(model, audio, self.language)
+        
+        self.words = []
+        for segment in self.transcript["segments"]:
+            for word in segment['words']:
+                self.words.append((float(word['start']), float(word['end']), word['text']))
+        
         return self.transcript
     
     def isolate_vocals(self):
@@ -44,8 +50,7 @@ class AudioProcessor:
         vocals_idx = model.sources.index("vocals")
         vocals = sources[vocals_idx].detach().cpu().numpy().T
         
-        vocals_dir = Path(self.temp_dir)
-        self.vocals_file = str(vocals_dir / 'vocals.wav')
+        self.vocals_file = str(self.temp_dir / 'vocals.wav')
         sf.write(self.vocals_file, vocals, model.samplerate)
 
         return self.vocals_file
@@ -59,7 +64,7 @@ class AudioProcessor:
         audio_data, sr = sf.read(audio_file)
         if len(audio_data.shape) > 1:
             audio_data = audio_data.mean(axis=1)
-        total_duration = len(audio_data) / sr
+        self.total_duration = len(audio_data) / sr
 
         energies = []
         for i in range(0, len(audio_data) - frame_length, hop_length):
@@ -71,7 +76,7 @@ class AudioProcessor:
         non_silent = energies > silence_thresh
         non_silent_indices = np.where(non_silent)[0]
 
-        non_silent_parts = []
+        self.non_silent_parts = []
         if len(non_silent_indices) > 0:
             start = non_silent_indices[0]
             for i in range(1, len(non_silent_indices)):
@@ -80,34 +85,52 @@ class AudioProcessor:
                     start_time = start * hop_length / sr
                     end_time = (end * hop_length + frame_length) / sr
                     if end_time - start_time >= min_non_silence_sec:
-                        non_silent_parts.append((start_time, end_time))
+                        self.non_silent_parts.append((start_time, end_time))
                     start = non_silent_indices[i]
             end = non_silent_indices[-1]
             start_time = start * hop_length / sr
             end_time = (end * hop_length + frame_length) / sr
             if end_time - start_time >= min_non_silence_sec:
-                non_silent_parts.append((start_time, end_time))
+                self.non_silent_parts.append((start_time, end_time))
 
-        silent_parts = []
+        self.silent_parts = []
         prev_end = 0.0
-        for start_time, end_time in non_silent_parts:
+        for start_time, end_time in self.non_silent_parts:
             if start_time > prev_end:
-                silent_parts.append((float(round(prev_end, 2)), float(round(start_time, 2))))
+                self.silent_parts.append((float(round(prev_end, 2)), float(round(start_time, 2))))
             prev_end = end_time
-        if prev_end < total_duration:
-            silent_parts.append((float(round(prev_end, 2)), float(round(total_duration, 2))))
-
-        print(f"Total audio duration: {total_duration:.2f} seconds")
-        print(f"Silent parts: {silent_parts}")
+        if prev_end < self.total_duration:
+            self.silent_parts.append((float(round(prev_end, 2)), float(round(self.total_duration, 2))))
 
         # save audio without silence
         extracted = []
-        for start_time, end_time in non_silent_parts:
+        for start_time, end_time in self.non_silent_parts:
             start_sample = int(start_time * sr)
             end_sample = int(end_time * sr)
             extracted.append(audio_data[start_sample:end_sample])
         if extracted:
             result = np.concatenate(extracted)
-            sf.write(self.vocals_file, result, sr)
+            self.no_silence_file = str(self.temp_dir / 'no_silence.wav')
+            sf.write(self.no_silence_file, result, sr)
 
-        return silent_parts, self.vocals_file
+        return self.silent_parts, self.no_silence_file
+    
+    def map_words_to_original(self):
+        mapping = []
+        new_time = 0.0
+        for orig_start, orig_end in self.non_silent_parts:
+            duration = orig_end - orig_start
+            mapping.append((orig_start, orig_end, new_time, new_time + duration))
+            new_time += duration
+
+        mapped_words = []
+        for word_start, word_end, word in self.words:
+            for orig_start, orig_end, new_start, new_end in mapping:
+                if new_start <= word_start < new_end:
+                    offset = word_start - new_start
+                    orig_word_start = orig_start + offset
+                    offset_end = word_end - new_start
+                    orig_word_end = orig_start + offset_end
+                    mapped_words.append((round(float(orig_word_start), 2), round(float(orig_word_end), 2), word))
+                    break
+        return mapped_words
