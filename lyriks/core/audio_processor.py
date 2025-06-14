@@ -2,14 +2,15 @@ import os
 import click
 import torch
 import tempfile
+import numpy as np
 import soundfile as sf
 import whisper_timestamped as whisper
 from pathlib import Path
 from langdetect import detect
 from typing import List, Dict, Any
+from demucs.audio import AudioFile
 from demucs.apply import apply_model
 from demucs.pretrained import get_model
-from demucs.audio import AudioFile
 
 class AudioProcessor:
     def __init__(self, audio_file: Path, lyrics_file: Path, model_size="small", device="cpu"):
@@ -20,16 +21,17 @@ class AudioProcessor:
         click.secho(f"Detected language: {self.language}", fg="blue")
         self.device = device
         self.model_size = model_size
+        self.vocals_file = None
+        self.temp_dir = tempfile.mkdtemp()
 
     def transcribe(self):
         model = whisper.load_model(self.model_size, device=self.device)
-        if self.vocals_file: self.audio = whisper.load_audio(self.vocals_file)
-        else: self.audio = whisper.load_audio(self.audio_file)
-        self.transcript = whisper.transcribe(model, self.audio, self.language)
+        if self.vocals_file: audio = whisper.load_audio(self.vocals_file)
+        else: audio = whisper.load_audio(self.audio_file)
+        self.transcript = whisper.transcribe(model, audio, self.language)
         return self.transcript
     
     def isolate_vocals(self):
-        output_dir = tempfile.mkdtemp()
         model = get_model("htdemucs").to(self.device)
         model.eval()
         
@@ -42,8 +44,70 @@ class AudioProcessor:
         vocals_idx = model.sources.index("vocals")
         vocals = sources[vocals_idx].detach().cpu().numpy().T
         
-        vocals_dir = Path(output_dir)
+        vocals_dir = Path(self.temp_dir)
         self.vocals_file = str(vocals_dir / 'vocals.wav')
         sf.write(self.vocals_file, vocals, model.samplerate)
 
         return self.vocals_file
+    
+    def remove_silence(self, frame_length=2048, hop_length=512, silence_thresh=0.02, min_non_silence_sec=0.2):
+        if hasattr(self, 'vocals_file') and self.vocals_file:
+            audio_file = self.vocals_file
+        else:
+            audio_file = self.audio_file
+
+        audio_data, sr = sf.read(audio_file)
+        if len(audio_data.shape) > 1:
+            audio_data = audio_data.mean(axis=1)
+        total_duration = len(audio_data) / sr
+
+        energies = []
+        for i in range(0, len(audio_data) - frame_length, hop_length):
+            frame = audio_data[i:i+frame_length]
+            energy = np.sqrt(np.mean(frame**2))
+            energies.append(energy)
+        energies = np.array(energies)
+
+        non_silent = energies > silence_thresh
+        non_silent_indices = np.where(non_silent)[0]
+
+        non_silent_parts = []
+        if len(non_silent_indices) > 0:
+            start = non_silent_indices[0]
+            for i in range(1, len(non_silent_indices)):
+                if non_silent_indices[i] != non_silent_indices[i-1] + 1:
+                    end = non_silent_indices[i-1]
+                    start_time = start * hop_length / sr
+                    end_time = (end * hop_length + frame_length) / sr
+                    if end_time - start_time >= min_non_silence_sec:
+                        non_silent_parts.append((start_time, end_time))
+                    start = non_silent_indices[i]
+            end = non_silent_indices[-1]
+            start_time = start * hop_length / sr
+            end_time = (end * hop_length + frame_length) / sr
+            if end_time - start_time >= min_non_silence_sec:
+                non_silent_parts.append((start_time, end_time))
+
+        silent_parts = []
+        prev_end = 0.0
+        for start_time, end_time in non_silent_parts:
+            if start_time > prev_end:
+                silent_parts.append((float(round(prev_end, 2)), float(round(start_time, 2))))
+            prev_end = end_time
+        if prev_end < total_duration:
+            silent_parts.append((float(round(prev_end, 2)), float(round(total_duration, 2))))
+
+        print(f"Total audio duration: {total_duration:.2f} seconds")
+        print(f"Silent parts: {silent_parts}")
+
+        # save audio without silence
+        extracted = []
+        for start_time, end_time in non_silent_parts:
+            start_sample = int(start_time * sr)
+            end_sample = int(end_time * sr)
+            extracted.append(audio_data[start_sample:end_sample])
+        if extracted:
+            result = np.concatenate(extracted)
+            sf.write(self.vocals_file, result, sr)
+
+        return silent_parts, self.vocals_file
