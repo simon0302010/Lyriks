@@ -23,16 +23,24 @@ def generate(audio_file, lyrics_file, output, model_size, device):
     from .core import audio_processor
     from .core import video_generator    
     
-    AudioProcessor = audio_processor.AudioProcessor(audio_file, lyrics_file, model_size, device)
-    vocals_path = AudioProcessor.isolate_vocals()
-    click.secho(f"Vocals Path: {vocals_path}", fg="green")
-    AudioProcessor.remove_silence()
-    transcript = AudioProcessor.transcribe()
-    print(AudioProcessor.map_words_to_original())
-    if output:
-        with open(output, "w") as f: f.write(str(transcript))
-    if os.path.exists(vocals_path):
-        os.remove(vocals_path)
+    try:
+        AudioProcessor = audio_processor.AudioProcessor(audio_file, lyrics_file, model_size, device)
+        
+        vocals_path = AudioProcessor.isolate_vocals()
+        click.secho(f"Vocals Path: {str(vocals_path)}", fg="green")
+        
+        silent_parts, no_silence_file = AudioProcessor.remove_silence()
+        click.secho(f"No silence audio: {str(no_silence_file)}")
+        
+        transcript = AudioProcessor.transcribe()
+        words = AudioProcessor.map_words_to_original()
+        
+        if output:
+            with open(output, "w") as f: f.write(str(words))
+        if os.path.exists(vocals_path):
+            os.remove(vocals_path)
+    except Exception as e:
+        click.secho(f"Error: {str(e)}", fg="red")
 
 if __name__ == "__main__":
     main()
