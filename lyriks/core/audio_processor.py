@@ -22,11 +22,10 @@ class AudioProcessor:
         self.device = device
         self.model_size = model_size
         self.vocals_file = None
+        self.model = whisper.load_model(self.model_size, device=self.device)
         self.temp_dir = Path(tempfile.mkdtemp())
 
-    def transcribe(self):
-        model = whisper.load_model(self.model_size, device=self.device)
-        
+    def transcribe(self):        
         # check which audios exist and choose one
         if hasattr(self, 'no_silence_file') and self.no_silence_file:
             audio = whisper.load_audio(self.no_silence_file)
@@ -38,7 +37,7 @@ class AudioProcessor:
             audio = whisper.load_audio(self.audio_file)
             self.used_silence_removed = False
         
-        self.transcript = whisper.transcribe(model, audio, self.language)
+        self.transcript = whisper.transcribe(self.model, audio, self.language)
         
         self.words = []
         for segment in self.transcript["segments"]:
@@ -191,7 +190,7 @@ class AudioProcessor:
                         ))
                         break
             
-            if not mapped_segment["words"] == []:
+            if not mapped_segment["words"] == [] and mapped_segment["end"] > mapped_segment["start"]:
                 self.mapped_words.append(mapped_segment)
         
         return self.mapped_words
