@@ -1,4 +1,5 @@
 import os
+import json
 import click
 from pathlib import Path
 
@@ -30,13 +31,14 @@ def generate(audio_file, lyrics_file, output, model_size, device):
         click.secho(f"Vocals Path: {str(vocals_path)}", fg="green")
         
         silent_parts, no_silence_file = AudioProcessor.remove_silence()
-        click.secho(f"No silence audio: {str(no_silence_file)}")
+        click.secho(f"No silence audio: {str(no_silence_file)}", fg="green")
         
-        transcript = AudioProcessor.transcribe()
+        transcript, words = AudioProcessor.transcribe()
         words = AudioProcessor.map_words_to_original()
         
         if output:
-            with open(output, "w") as f: f.write(str(words))
+            with open(output, "w") as f:
+                json.dump(words, f, indent=2)
         if os.path.exists(vocals_path):
             os.remove(vocals_path)
     except Exception as e:

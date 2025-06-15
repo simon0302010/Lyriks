@@ -42,10 +42,17 @@ class AudioProcessor:
         
         self.words = []
         for segment in self.transcript["segments"]:
+            segment_words = []
             for word in segment['words']:
-                self.words.append((float(word['start']), float(word['end']), word['text']))
+                segment_words.append((float(word['start']), float(word['end']), word['text']))
+            self.words.append({
+                "start": round(float(segment['start']), 2),
+                "end": round(float(segment['end']), 2),
+                "text": segment['text'],
+                "words": segment_words
+            })
         
-        return self.transcript
+        return self.transcript, self.words
     
     def isolate_vocals(self):
         model = get_model("htdemucs").to(self.device)
@@ -137,14 +144,54 @@ class AudioProcessor:
             mapping.append((orig_start, orig_end, new_time, new_time + duration))
             new_time += duration
 
-        mapped_words = []
-        for word_start, word_end, word in self.words:
+        self.mapped_words = []
+        for segment in self.words:
+            mapped_segment = {"text": segment["text"], "words": []}
+            
+            # map segment start time
+            segment_start = segment["start"]
+            mapped_segment_start = None
             for orig_start, orig_end, new_start, new_end in mapping:
-                if new_start <= word_start < new_end:
-                    offset = word_start - new_start
-                    orig_word_start = orig_start + offset
-                    offset_end = word_end - new_start
-                    orig_word_end = orig_start + offset_end
-                    mapped_words.append((round(float(orig_word_start), 2), round(float(orig_word_end), 2), word))
+                if new_start <= segment_start < new_end:
+                    offset = segment_start - new_start
+                    mapped_segment_start = orig_start + offset
                     break
-        return mapped_words
+                    
+            # map segment end time
+            segment_end = segment["end"]
+            mapped_segment_end = None
+            for orig_start, orig_end, new_start, new_end in mapping:
+                if new_start <= segment_end < new_end:
+                    offset = segment_end - new_start
+                    mapped_segment_end = orig_start + offset
+                    break
+            
+            if mapped_segment_start is not None:
+                mapped_segment["start"] = round(float(mapped_segment_start), 2)
+            else:
+                mapped_segment["start"] = segment["start"]  # Fallback
+                
+            if mapped_segment_end is not None:
+                mapped_segment["end"] = round(float(mapped_segment_end), 2)
+            else:
+                mapped_segment["end"] = segment["end"]  # Fallback
+            
+            # map each word in the segment
+            for word_start, word_end, word in segment['words']:
+                for orig_start, orig_end, new_start, new_end in mapping:
+                    if new_start <= word_start < new_end:
+                        offset = word_start - new_start
+                        orig_word_start = orig_start + offset
+                        offset_end = word_end - new_start
+                        orig_word_end = orig_start + offset_end
+                        mapped_segment["words"].append((
+                            round(float(orig_word_start), 2), 
+                            round(float(orig_word_end), 2), 
+                            word
+                        ))
+                        break
+            
+            if not mapped_segment["words"] == []:
+                self.mapped_words.append(mapped_segment)
+        
+        return self.mapped_words
