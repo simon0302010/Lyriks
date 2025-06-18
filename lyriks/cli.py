@@ -10,9 +10,10 @@ def main():
     pass
 
 @main.command()
-@click.option("--text", "-t", default="Hello World!", help="Prints anything to the Command Line")
+@click.option("--text", "-t", default="Hello World!", help="Creates a lyrics video clip with the specified text.")
 def test(text):
-    click.secho(str(text), fg="green", bold=True)
+    from .core import video_generator
+    VideoGenerator = video_generator.VideoGenerator()
     
 @main.command()
 @click.argument("audio_file", type=click.Path(exists=True, path_type=Path))
