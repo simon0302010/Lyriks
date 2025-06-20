@@ -12,14 +12,13 @@ def main():
 @main.command()
 @click.argument("audio_file", type=click.Path(exists=True, path_type=Path))
 @click.argument("lyrics_file", type=click.Path(exists=True, path_type=Path))
-@click.option("--output", "-o", help="Output video file")
+@click.option("--output", "-o", help="Output video file name")
 @click.option("--model_size", "-m", help="Sets the whisper model size")
 @click.option("--device", "-d", help="Which device to use for whisper model inference")
 def generate(audio_file, lyrics_file, output, model_size, device):
     from .core import audio_processor
     from .core import video_generator
     import io
-    import sys
     from contextlib import redirect_stdout, redirect_stderr
     
     try:
@@ -47,12 +46,14 @@ def generate(audio_file, lyrics_file, output, model_size, device):
         
         words = AudioProcessor.map_words_to_original()
         
-        if output:
-            with open(output, "w") as f:
-                json.dump(words, f, indent=2)
         if os.path.exists(vocals_path):
             os.remove(vocals_path)
-            
+        
+        VideoGenerator = video_generator.VideoGenerator(audio_file)
+        for segment in json.loads(json.dumps(words)):
+            VideoGenerator.add_text(segment["text"], segment["start"], segment["end"])
+        VideoGenerator.render_video(output_file_name=output)
+        
         click.secho("Processing completed successfully!", fg="green")
         
     except Exception as e:
