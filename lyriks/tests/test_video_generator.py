@@ -25,5 +25,6 @@ data = [
 from lyriks.core.video_generator import VideoGenerator
 
 generator = VideoGenerator("/home/simon/Documents/python/testing/song.mp3", duration=8) # change this to the path of your audio
-generator.add_text("test text", 5, 15)
+for segment in data:
+    generator.add_text(segment["text"], segment["start"], segment["end"])
 generator.render_video("output.mp4")
