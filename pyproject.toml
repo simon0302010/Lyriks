@@ -22,7 +22,9 @@ dependencies = [
     "torch",
     "torchaudio",
     "whisper-timestamped",
-    "moviepy"
+    "moviepy",
+    "iso639-lang",
+    "matplotlib"
 ]
 
 [project.urls]
