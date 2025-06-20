@@ -4,6 +4,7 @@ import torch
 import tempfile
 import numpy as np
 import soundfile as sf
+from iso639 import Lang
 import whisper_timestamped as whisper
 from pathlib import Path
 from langdetect import detect
@@ -18,7 +19,7 @@ class AudioProcessor:
         self.audio_file = str(audio_file)
         with open(lyrics_file, "r") as f: self.lyrics = f.read()
         self.language = detect(self.lyrics)
-        click.secho(f"Detected language: {self.language}", fg="blue")
+        click.secho(f"Detected language: {Lang(self.language).name}", fg="blue")
         self.device = device
         self.model_size = model_size
         self.vocals_file = None
