@@ -11,9 +11,11 @@ def main():
 
 @main.command()
 @click.option("--text", "-t", default="Hello World!", help="Creates a lyrics video clip with the specified text.")
-def test(text):
+def test(text: str):
     from .core import video_generator
     VideoGenerator = video_generator.VideoGenerator()
+    VideoGenerator.add_text(str(text))
+    VideoGenerator.render_video("output.mp4")
     
 @main.command()
 @click.argument("audio_file", type=click.Path(exists=True, path_type=Path))
@@ -23,7 +25,7 @@ def test(text):
 @click.option("--device", "-d", help="Which device to use for whisper model inference")
 def generate(audio_file, lyrics_file, output, model_size, device):
     from .core import audio_processor
-    from .core import video_generator    
+    from .core import video_generator
     import io
     import sys
     from contextlib import redirect_stdout, redirect_stderr
