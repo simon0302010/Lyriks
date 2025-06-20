@@ -5,14 +5,19 @@ from pathlib import Path
 from matplotlib import font_manager
 
 class VideoGenerator:
-    def __init__(self, audio_path, clip_path=None):
+    def __init__(self, audio_path, clip_path=None, duration=None):
         self.audio = AudioFileClip(str(audio_path))
-        self.audio_duration = self.audio.duration
-        self.audio = self.audio.subclipped(0, 20)
+        self.audio_duration = round(self.audio.duration, 2)
+        click.secho(f"Audio Duration: {self.audio_duration} seconds", fg="green")
         if clip_path is None:
             clip_path = Path(__file__).parent.parent / "templates" / "video.mp4"
             clip_path = clip_path.resolve()
-        self.clip = (VideoFileClip(str(clip_path)).subclipped(0, 20))
+        if duration is not None:
+            self.clip = (VideoFileClip(str(clip_path)).subclipped(0, int(duration)))
+            self.audio = self.audio.subclipped(0, int(duration))
+        else:
+            self.clip = (VideoFileClip(str(clip_path)).subclipped(0, self.audio_duration))
+            self.audio = self.audio.subclipped(0, self.audio_duration)
         self.video_width = self.clip.w
         self.video_height = self.clip.h
         self.font_path = font_manager.findfont("DejaVu Sans")
