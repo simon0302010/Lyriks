@@ -196,3 +196,4 @@ cython_debug/
 .cursorindexingignore
 test.py
 out.json
+output.mp4
