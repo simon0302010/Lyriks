@@ -21,7 +21,8 @@ dependencies = [
     "soundfile",
     "torch",
     "torchaudio",
-    "whisper-timestamped"
+    "whisper-timestamped",
+    "moviepy"
 ]
 
 [project.urls]
