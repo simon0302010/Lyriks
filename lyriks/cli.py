@@ -10,14 +10,6 @@ def main():
     pass
 
 @main.command()
-@click.option("--text", "-t", default="Hello World!", help="Creates a lyrics video clip with the specified text.")
-def test(text: str):
-    from .core import video_generator
-    VideoGenerator = video_generator.VideoGenerator()
-    VideoGenerator.add_text(str(text), 5, 15)
-    VideoGenerator.render_video("output.mp4")
-    
-@main.command()
 @click.argument("audio_file", type=click.Path(exists=True, path_type=Path))
 @click.argument("lyrics_file", type=click.Path(exists=True, path_type=Path))
 @click.option("--output", "-o", help="Output video file")
@@ -46,7 +38,7 @@ def generate(audio_file, lyrics_file, output, model_size, device):
             stderr_output = stderr_buffer.getvalue()
             
             if "Got start time outside of audio boundary" in stdout_output or "Got start time outside of audio boundary" in stderr_output:
-                click.secho("Warning: Running process again", fg="yellow")
+                click.secho(f"Warning: Running process again ({str(i + 1)}/3)", fg="yellow")
             else:
                 break
         
