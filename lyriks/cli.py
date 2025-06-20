@@ -14,7 +14,7 @@ def main():
 def test(text: str):
     from .core import video_generator
     VideoGenerator = video_generator.VideoGenerator()
-    VideoGenerator.add_text(str(text))
+    VideoGenerator.add_text(str(text), 5, 15)
     VideoGenerator.render_video("output.mp4")
     
 @main.command()
