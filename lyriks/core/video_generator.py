@@ -9,9 +9,10 @@ class VideoGenerator:
         if clip_path is None:
             clip_path = Path(__file__).parent.parent / "templates" / "video.mp4"
             clip_path = clip_path.resolve()
-        self.video = (VideoFileClip(str(clip_path)).subclipped(0, 20))
-        self.video_height, self.video_width = self.video.h, self.video.w
+        self.clip = (VideoFileClip(str(clip_path)).subclipped(0, 20))
+        self.video_height, self.video_width = self.clip.h, self.clip.w
         self.font_path = font_manager.findfont("DejaVu Sans")
+        self.text_clips = []
         click.secho("Video Generator initialized", fg="green")
         
     def add_text(self, text, start: int, end: int):
@@ -24,7 +25,13 @@ class VideoGenerator:
             size=(self.video_width, self.video_height)
         )
         txt_clip = txt_clip.with_position("center").with_start(start).with_end(end)
-        self.video = CompositeVideoClip([self.video, txt_clip])
+        self.text_clips.append(txt_clip)
         
     def render_video(self, output):
-        self.video.write_videofile(output)
+        self.video = CompositeVideoClip([self.clip] + self.text_clips)
+        self.video.write_videofile(
+            output,
+            temp_audiofile="temp-audio.m4a",
+            remove_temp=True,
+            codec="libx264"
+        )
