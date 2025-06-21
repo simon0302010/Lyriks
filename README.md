@@ -16,28 +16,16 @@ Lyriks is an automated lyrics video generator. It transcribes the audio and auto
 
 - A NVIDIA GPU
 - 10GB of free disk space
+- Python 3.11
 
 ---
 
 
 ## Installation
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/simon0302010/Lyriks.git
-   cd Lyriks
-   ```
-
-2. **(Optional) Create a virtual environment:**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-
-3. **Install Lyriks:**
-   ```bash
-   pip install .
-   ```
+```bash
+pip install lyriks-video
+```
 
 ---
 
