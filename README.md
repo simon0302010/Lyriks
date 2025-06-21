@@ -12,6 +12,14 @@ Lyriks is an automated lyrics video generator. It transcribes the audio and auto
 
 ---
 
+## Requirements
+
+- A NVIDIA GPU
+- 10GB of free disk space
+
+---
+
+
 ## Installation
 
 1. **Clone the repository:**
