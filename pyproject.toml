@@ -3,8 +3,8 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "lyriks"
-version = "0.2.0"
+name = "lyriks-video"
+version = "0.2.1"
 description = "Automated lyrics video generator"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
