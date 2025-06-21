@@ -24,7 +24,8 @@ data = [
 
 from lyriks.core.video_generator import VideoGenerator
 
-generator = VideoGenerator("/home/simon/Documents/python/testing/song.mp3", duration=8) # change this to the path of your audio
+generator = VideoGenerator("/home/simon/Documents/python/testing/song.mp3", duration=5) # change this to the path of your audio
 for segment in data:
-    generator.add_text(segment["text"], segment["start"], segment["end"])
-generator.render_video("output.mp4")
+    coords = generator.add_text(segment["text"], segment["start"], segment["end"])
+    generator.place_markers(coords, segment["start"], segment["end"])
+generator.render_video("output")
