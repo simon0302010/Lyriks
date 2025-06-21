@@ -1,3 +1,7 @@
+![PyPI - Version](https://img.shields.io/pypi/v/lyriks-video)
+![PyPI - License](https://img.shields.io/pypi/l/lyriks-video)
+![](https://hackatime-badge.hackclub.com/U08HC7N4JJW/Lyriks)
+
 # Lyriks
 
 Lyriks is an automated lyrics video generator. It transcribes the audio and automatically creates a video using MoviePy.
