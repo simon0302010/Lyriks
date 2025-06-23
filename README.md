@@ -14,6 +14,7 @@ Lyriks is an automated lyrics video generator. It transcribes the audio and auto
 
 ## Requirements
 
+- Linux
 - A NVIDIA GPU
 - 10GB of free disk space
 - Python 3.11
