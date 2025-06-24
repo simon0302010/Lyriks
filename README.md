@@ -25,7 +25,6 @@ Lyriks is an automated lyrics video generator. It transcribes the audio and auto
 
 ---
 
-
 ## Installation
 
 ```bash
@@ -37,8 +36,38 @@ pip install lyriks-video
 ## Usage
 
 ```bash
-python -m lyriks generate path/to/song.mp3 path/to/lyrics.json -m WHISPER_MODEL_SIZE -d DEVICE -o OUTPUT_FILE_NAME
+python -m lyriks generate AUDIO_FILE LYRICS_FILE [OPTIONS]
 ```
+
+### Parameters
+
+- **AUDIO_FILE**: Path to the input audio file (e.g., `song.mp3`).  
+- **LYRICS_FILE**: Path to the lyrics file (plain text).
+
+### Options
+
+- `--output`, `-o`  
+  Output video file name (without extension).  
+  *Example:* `-o my_lyrics_video`
+
+- `--model_size`, `-m`  
+  Sets the Whisper model size.  
+  *Options:* `tiny`, `base`, `small`, `medium`, `large`  
+  *Default:* `small`
+
+- `--device`, `-d`  
+  Which device to use for Whisper model inference.  
+  *Options:* `cpu`, `cuda`  
+  *Default:* `cpu` (use `cuda` for GPU acceleration)
+
+---
+
+### Example
+
+```bash
+python -m lyriks generate path/to/song.mp3 path/to/lyrics.txt -m small -d cuda -o output_video
+```
+
 Note: This process can take up to 20 minutes on lower end hardware.
 
 ---
@@ -70,3 +99,4 @@ This project uses [Demucs](https://github.com/facebookresearch/demucs) for music
   booktitle={Proceedings of the ISMIR 2021 Workshop on Music Source Separation},
   year={2021}
 }
+```
