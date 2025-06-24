@@ -27,6 +27,15 @@ Lyriks is an automated lyrics video generator. It transcribes the audio and auto
 
 ## Installation
 
+It is highly recommended to use a virtual environment for isolation:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Then install Lyriks with pip:
+
 ```bash
 pip install lyriks-video
 ```
