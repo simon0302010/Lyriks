@@ -12,9 +12,9 @@ def main():
 @main.command()
 @click.argument("audio_file", type=click.Path(exists=True, path_type=Path))
 @click.argument("lyrics_file", type=click.Path(exists=True, path_type=Path))
-@click.option("--output", "-o", help="Output video file name")
-@click.option("--model_size", "-m", help="Sets the whisper model size")
-@click.option("--device", "-d", help="Which device to use for whisper model inference")
+@click.option("--output", "-o", help="Output video file name", default="output")
+@click.option("--model_size", "-m", help="Sets the whisper model size", default="small")
+@click.option("--device", "-d", help="Which device to use for whisper model inference", default="cpu")
 def generate(audio_file, lyrics_file, output, model_size, device):
     from .core import audio_processor
     from .core import video_generator
