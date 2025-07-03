@@ -66,13 +66,14 @@ class VideoGenerator:
             marker_clip = marker_clip.with_start(start).with_end(end)
             self.text_clips.append(marker_clip)
 
-    def render_video(self, output_file_name):
+    def render_video(self, output_file_name, temp_dir):
         self.video = CompositeVideoClip([self.clip] + self.text_clips)
         self.video = self.video.with_audio(self.audio)
         output = output_file_name + ".mp4"
+        temp_audiofile = str(temp_dir / "temp-audio.mp3")
         self.video.write_videofile(
             output,
-            temp_audiofile="temp-audio.mp3",
+            temp_audiofile=temp_audiofile,
             remove_temp=True,
             codec="libx264",
             audio_codec="libmp3lame",

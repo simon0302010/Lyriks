@@ -127,7 +127,10 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
 
         if os.path.exists(vocals_path):
             os.remove(vocals_path)
+        if os.path.exists(no_silence_file):
+            os.remove(no_silence_file)
 
+        temp_dir = AudioProcessor.temp_dir
         success = False
 
         if generator == "mp":
@@ -136,7 +139,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
                 VideoGenerator.add_text(
                     segment["text"], segment["start"], segment["end"]
                 )
-            VideoGenerator.render_video(output_file_name=output)
+            VideoGenerator.render_video(output_file_name=output, temp_dir=temp_dir)
             click.secho("Video created using MoviePy.", fg="green")
             success = True
         elif generator == "ps2":
@@ -155,9 +158,9 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
             success = False
 
         if success:
-            click.secho("\nProcessing completed successfully!", fg="green")
+            click.secho("Processing completed successfully!", fg="green")
         else:
-            click.secho("\nOne or more errors occurred during processing.", fg="red")
+            click.secho("One or more errors occurred during processing.", fg="red")
 
     except Exception as e:
         click.secho(f"Error: {str(e)}", fg="red")
