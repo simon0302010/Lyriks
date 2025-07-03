@@ -2,7 +2,7 @@ from pathlib import Path
 
 import click
 from matplotlib import font_manager
-from moviepy import AudioFileClip, VideoFileClip, TextClip, CompositeVideoClip
+from moviepy import AudioFileClip, CompositeVideoClip, TextClip, VideoFileClip
 from PIL import ImageFont
 
 

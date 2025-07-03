@@ -1,8 +1,13 @@
 import json
 import os
+import sys
 from pathlib import Path
 
 import click
+import questionary
+from questionary import Style
+
+questionary_style = Style([("pointer", "fg:cyan bold")])
 
 
 @click.group()
@@ -14,13 +19,13 @@ def main():
 @main.command()
 @click.argument("audio_file", type=click.Path(exists=True, path_type=Path))
 @click.argument("lyrics_file", type=click.Path(exists=True, path_type=Path))
-@click.option("--output", "-o", help="Output video file name", default="output")
-@click.option("--model_size", "-m", help="Sets the whisper model size", default="small")
+@click.option("--output", "-o", help="Output video file name", default=None)
+@click.option("--model_size", "-m", help="Sets the whisper model size", default=None)
 @click.option(
     "--device",
     "-d",
     help="Which device to use for whisper model inference",
-    default="cpu",
+    default=None,
 )
 def generate(audio_file, lyrics_file, output, model_size, device):
     import io
@@ -29,6 +34,40 @@ def generate(audio_file, lyrics_file, output, model_size, device):
     from .core import audio_processor, video_generator
 
     try:
+        if not model_size:
+            model_choices = [
+                {"name": "tiny   (fastest, lowest accuracy)", "value": "tiny"},
+                {"name": "small  (fast, good accuracy)", "value": "small"},
+                {"name": "medium (balanced)", "value": "medium"},
+                {"name": "large  (slowest, highest accuracy)", "value": "large"},
+                {"name": "turbo  (experimental, very fast)", "value": "turbo"},
+            ]
+            model_size = questionary.select(
+                "Which Whisper model size do you want to use?",
+                choices=model_choices,
+                style=questionary_style,
+            ).ask()
+            if not model_size:
+                sys.exit(0)
+        if not device:
+            device_choices = [
+                {"name": "NVIDIA GPU (CUDA)", "value": "cuda"},
+                {"name": "CPU", "value": "cpu"},
+            ]
+            device = questionary.select(
+                "Which device do you want to use for computation?",
+                choices=device_choices,
+                style=questionary_style,
+            ).ask()
+            if not device:
+                sys.exit(0)
+        if not output:
+            output = questionary.text(
+                "What should be the name of the output file?"
+            ).ask()
+            if not output:
+                sys.exit(0)
+
         AudioProcessor = audio_processor.AudioProcessor(
             audio_file, lyrics_file, model_size, device
         )

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lyriks-video"
-version = "0.2.5"
+version = "0.2.6"
 description = "Automated lyrics video generator"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
@@ -24,7 +24,9 @@ dependencies = [
     "whisper-timestamped",
     "moviepy",
     "iso639-lang",
-    "matplotlib"
+    "matplotlib",
+    "pysubs2",
+    "questionary"
 ]
 classifiers = [
     "Operating System :: POSIX :: Linux"
