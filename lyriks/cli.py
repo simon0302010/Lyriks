@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 from pathlib import Path
 
 import click
@@ -84,6 +85,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
                     "name": "pysubs2 + ffmpeg (fast, good quality, experimental)",
                     "value": "ps2",
                 },
+                {"name": "Only save transcript (for debugging)", "value": "ts"}
             ]
             generator = questionary.select(
                 "Select the video generator backend:",
@@ -143,6 +145,11 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
                 fg="yellow",
             )
             success = False
+        elif generator == "ts":
+            click.secho("Only saving transcript", fg="green")
+            with open(output + ".json", "w") as file:
+                json.dump(words, file, indent=2)
+            success = True
         else:
             click.secho("Unknown video generator selected.", fg="red")
             success = False
