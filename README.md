@@ -73,7 +73,7 @@ You will be interactively prompted in the CLI for any options you leave unspecif
 
 - `--model_size`, `-m`  
   Sets the Whisper model size.  
-  *Options:* `tiny`, `base`, `small`, `medium`, `large`  
+  *Options:* `tiny`, `base`, `small`, `medium`, `large`, `turbo`
   *Default:* `small`
 
 - `--device`, `-d`  
@@ -99,6 +99,7 @@ Note: This process can take up to 20 minutes on lower end hardware.
 - Per-word highlighting in videos
 - Fancier video styles and effects
 - Add more robust error handling
+- Ask which background to use
 
 ---
 

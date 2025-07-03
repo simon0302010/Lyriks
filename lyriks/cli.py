@@ -44,6 +44,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
         if not model_size:
             model_choices = [
                 {"name": "tiny   (fastest, lowest accuracy)", "value": "tiny"},
+                {"name": "base   (fast, slightly better accuracy)", "value": "base"},
                 {"name": "small  (fast, good accuracy)", "value": "small"},
                 {"name": "medium (balanced)", "value": "medium"},
                 {"name": "large  (slowest, highest accuracy)", "value": "large"},
