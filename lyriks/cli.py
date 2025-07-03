@@ -22,11 +22,11 @@ def main():
 @click.argument("audio_file", type=click.Path(exists=True, path_type=Path))
 @click.argument("lyrics_file", type=click.Path(exists=True, path_type=Path))
 @click.option("--output", "-o", help="Output video file name", default=None)
-@click.option("--model_size", "-m", help="Sets the whisper model size", default=None)
+@click.option("--model_size", "-m", help="Set the Whisper model size", default=None)
 @click.option(
     "--device",
     "-d",
-    help="Which device to use for whisper model inference",
+    help="Which device to use for Whisper model inference",
     default=None,
 )
 @click.option(
@@ -39,6 +39,8 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
     from .core import audio_processor
 
     try:
+        audio_name = Path(audio_file).stem
+        
         if not model_size:
             model_choices = [
                 {"name": "tiny   (fastest, lowest accuracy)", "value": "tiny"},
@@ -48,12 +50,12 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
                 {"name": "turbo  (experimental, very fast)", "value": "turbo"},
             ]
             model_size = questionary.select(
-                "Choose Whisper model size:",
+                "Select the Whisper model size:",
                 choices=model_choices,
                 style=questionary_style,
             ).ask()
             if not model_size:
-                click.secho("Please specify a model size", fg="red")
+                click.secho("You must specify a model size.", fg="red")
                 sys.exit(0)
 
         if not device:
@@ -62,20 +64,20 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
                 {"name": "CPU", "value": "cpu"},
             ]
             device = questionary.select(
-                "Select compute device:",
+                "Select the compute device:",
                 choices=device_choices,
                 style=questionary_style,
             ).ask()
             if not device:
-                click.secho("Please specify a compute device", fg="red")
+                click.secho("You must specify a compute device.", fg="red")
                 sys.exit(0)
 
         if not output:
             output = questionary.text(
-                "Output video file name (no extension):", default="output"
+                "Output video file name (without extension):", default=audio_name
             ).ask()
             if not output:
-                click.secho("Please specify a output file name", fg="red")
+                click.secho("You must specify an output file name.", fg="red")
                 sys.exit(0)
 
         if not generator:
@@ -93,7 +95,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
                 style=questionary_style,
             ).ask()
             if not generator:
-                click.secho("Please specify a video generator backend.", fg="red")
+                click.secho("You must specify a video generator backend.", fg="red")
                 sys.exit(0)
 
         AudioProcessor = audio_processor.AudioProcessor(
@@ -116,7 +118,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
                 "Got start time outside of audio boundary" in stdout_output
                 or "Got start time outside of audio boundary" in stderr_output
             ):
-                click.secho(f"Warning: Retrying process ({str(i + 1)}/3)", fg="yellow")
+                click.secho(f"Warning: Retrying process ({str(i + 1)}/3).", fg="yellow")
             else:
                 break
 
@@ -149,7 +151,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
             )
             success = False
         elif generator == "ts":
-            click.secho("Only saving transcript", fg="green")
+            click.secho("Only saving transcript.", fg="green")
             with open(output + ".json", "w") as file:
                 json.dump(words, file, indent=2)
             success = True
