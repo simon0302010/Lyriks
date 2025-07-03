@@ -1,4 +1,4 @@
-from lyriks.core.video_generator import VideoGenerator
+from lyriks.core.video_generator_mp import VideoGenerator
 
 data = [
     {
