@@ -102,7 +102,7 @@ You will be interactively prompted in the CLI for any options you leave unspecif
 python -m lyriks generate path/to/song.mp3 path/to/lyrics.txt -m small -d cuda -o output_video
 ```
 
-Note: This process can take up to 20 minutes on lower end hardware.
+Note: This process can take up to 5 minutes on lower end hardware.
 
 ---
 
@@ -115,6 +115,19 @@ Note: This process can take up to 20 minutes on lower end hardware.
 - Batch processing
 - Loading bars
 - Karaoke function
+
+---
+
+## How Lyriks Works
+
+<details>
+<summary><strong>Show Flowchart</strong></summary>
+
+<p align="center">
+  <img src="flowchart.svg" alt="Flowchart" width="800"/>
+</p>
+
+</details>
 
 ---
 
