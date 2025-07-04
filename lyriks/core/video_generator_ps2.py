@@ -1,6 +1,6 @@
 import pysubs2
 import subprocess
-import json
+import os
 
 class VideoGenerator:
     def __init__(
@@ -28,7 +28,15 @@ class VideoGenerator:
         )
         self.filename = None
         
-    def add_words(self, segment, style="Default"):
+    def add_words(self, segment, style="Default", resolution="1920x1080"):
+        try:
+            width, height = map(int, resolution.lower().split("x"))
+        except Exception:
+            width, height = 1920, 1080
+
+        x = width // 2
+        y = height // 2
+        pos_tag = fr"{{\an5\pos({x},{y})}}"
         words = segment["words"]
         if words and isinstance(words[0], list):
             words = [{"start": w[0], "end": w[1], "word": w[2]} for w in words]
@@ -40,7 +48,7 @@ class VideoGenerator:
                 pysubs2.SSAEvent(
                     start=int(start * 1000),
                     end=int(end * 1000),
-                    text=r"{\c&HFFFFFF&}" + full_text,
+                    text=pos_tag + r"{\c&HFFFFFF&}" + full_text,
                     style=style
                 )
             )
@@ -65,7 +73,7 @@ class VideoGenerator:
                 pysubs2.SSAEvent(
                     start=int(w["start"] * 1000),
                     end=int(w["end"] * 1000),
-                    text=text,
+                    text=pos_tag + text,
                     style=style
                 )
             )
@@ -100,22 +108,36 @@ class VideoGenerator:
             except Exception:
                 duration = None
 
+        # render with subtitles
+        temp_video = output_file_name + "_temp.mp4"
         ffmpeg_cmd = [
             "ffmpeg",
             "-y",
             "-f", "lavfi",
             "-i", f"color=c=black:s={size}:d={duration if duration else 60}:r={fps}",
-        ]
-        if audio_file:
-            ffmpeg_cmd += ["-i", str(audio_file)]
-        ffmpeg_cmd += [
             "-vf", f"ass={self.filename}",
-            "-shortest" if audio_file else "",
             "-c:v", "libx264",
             "-pix_fmt", "yuv420p",
+            temp_video,
         ]
-        if audio_file:
-            ffmpeg_cmd += ["-c:a", "aac", "-b:a", "192k"]
-        ffmpeg_cmd.append(output_file_name + ".mp4")
-        ffmpeg_cmd = [arg for arg in ffmpeg_cmd if arg]
         subprocess.run(ffmpeg_cmd, check=True)
+
+        # mix audio and video
+        if audio_file:
+            final_output = output_file_name + ".mp4"
+            ffmpeg_mux_cmd = [
+                "ffmpeg",
+                "-y",
+                "-i", temp_video,
+                "-i", str(audio_file),
+                "-c:v", "copy",
+                "-c:a", "aac",
+                "-b:a", "192k",
+                "-shortest",
+                final_output,
+            ]
+            subprocess.run(ffmpeg_mux_cmd, check=True)
+            # remove temp video
+            os.remove(temp_video)
+        else:
+            os.rename(temp_video, output_file_name + ".mp4")
