@@ -29,6 +29,8 @@ Each JSON object should have:
 
 Align each lyric line to the corresponding words and their timestamps. Output a valid JSON array following this schema.
 YOU HAVE TO IMPROVE BOTH THE WORDS AND TEXTS!
+NO MATTER HOW MESSED UP THE WHISPER TRANSCRIPT IS YOU ARE OBLIGATED TO USE THOSE TIMINGS AND THE CORRECT LYRICS!
+MAKE 100% SURE THAT YOU HAVE TIMESTAMPS + CORRECT LYRICS AT THE END!
 """
 
     contents = [
@@ -92,7 +94,7 @@ YOU HAVE TO IMPROVE BOTH THE WORDS AND TEXTS!
     # parse json
     try:
         result_json = json.loads(result_str)
-        print(json.dumps(result_json, indent=2, ensure_ascii=False))
+        #print(json.dumps(result_json, indent=2, ensure_ascii=False))
         return result_json
     except Exception as e:
         print("Failed to parse JSON:", e)
