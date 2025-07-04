@@ -120,14 +120,9 @@ Note: This process can take up to 5 minutes on lower end hardware.
 
 ## How Lyriks Works
 
-<details>
-<summary><strong>Show Flowchart</strong></summary>
-
 <p align="center">
   <img src="flowchart.svg" alt="Flowchart" width="800"/>
 </p>
-
-</details>
 
 ---
 
