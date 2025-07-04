@@ -29,7 +29,7 @@ Lyriks is an automated lyrics video generator. It transcribes the audio and auto
 ## Requirements
 
 - Linux
-- A NVIDIA GPU
+- An NVIDIA GPU (recommended for best performance; CPU is supported but slower)
 - 10GB of free disk space
 - Python 3.11
 
@@ -60,8 +60,13 @@ python -m lyriks generate AUDIO_FILE LYRICS_FILE [OPTIONS]
 
 ### Parameters
 
-- **AUDIO_FILE**: Path to the input audio file (e.g., `song.mp3`).  
-- **LYRICS_FILE**: Path to the lyrics file (plain text).
+- **AUDIO_FILE**  
+  Path to the input audio file (e.g., `song.mp3`).  
+  This should be a supported audio format (such as MP3 or WAV).
+
+- **LYRICS_FILE**  
+  Path to the lyrics file (plain text).  
+  The lyrics should be in a text file, one line per lyric segment.
 
 ### Options
 
@@ -72,14 +77,22 @@ You will be interactively prompted in the CLI for any options you leave unspecif
   *Example:* `-o my_lyrics_video`
 
 - `--model_size`, `-m`  
-  Sets the Whisper model size.  
-  *Options:* `tiny`, `base`, `small`, `medium`, `large`, `turbo`
-  *Default:* `small`
+  Sets the Whisper model size for transcription.  
+  *Options:* `tiny`, `base`, `small`, `medium`, `large`, `turbo`  
 
 - `--device`, `-d`  
   Which device to use for Whisper model inference.  
   *Options:* `cpu`, `cuda`  
-  *Default:* `cpu` (use `cuda` for GPU acceleration)
+
+- `--generator`, `-g`  
+  Which backend to use for video generation.  
+  *Options:*  
+    - `mp`: MoviePy (slow, low quality)  
+    - `ps2`: pysubs2 + ffmpeg (fast, good quality, experimental)  
+    - `ts`: Only save transcript (for debugging)  
+
+- `--no-gemini`  
+  Disable Gemini improvements for Whisper output.  
 
 ---
 
@@ -100,6 +113,7 @@ Note: This process can take up to 20 minutes on lower end hardware.
 - Fancier video styles and effects
 - Add more robust error handling
 - Ask which background to use
+- Batch processing
 
 ---
 
