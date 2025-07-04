@@ -58,7 +58,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
                     {"name": "small  (fast, good accuracy)", "value": "small"},
                     {"name": "medium (balanced)", "value": "medium"},
                     {"name": "large  (slowest, highest accuracy)", "value": "large"},
-                    {"name": "turbo  (very fast, accurate)", "value": "turbo"},
+                    {"name": "turbo  (very fast, accurate, experimental)", "value": "turbo"},
                 ]
                 model_size = questionary.select(
                     "Select the Whisper model size:",
