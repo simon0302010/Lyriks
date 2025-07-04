@@ -28,7 +28,7 @@ Lyriks is an automated lyrics video generator. It transcribes the audio and auto
 
 ## Requirements
 
-- Linux
+- Linux (Windows support is experimental)
 - An NVIDIA GPU (recommended for best performance; CPU is supported but slower)
 - 10GB of free disk space
 - Python 3.11
@@ -45,11 +45,6 @@ sudo apt install ffmpeg
 On **Arch Linux**:
 ```bash
 sudo pacman -S ffmpeg
-```
-
-On **macOS** (with Homebrew):
-```bash
-brew install ffmpeg
 ```
 
 For other platforms and more details, see the [FFmpeg download page](https://ffmpeg.org/download.html).
