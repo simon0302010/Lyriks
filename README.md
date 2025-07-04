@@ -24,9 +24,7 @@ Lyriks is an automated lyrics video generator. It transcribes the audio and auto
 - **ASS subtitle generation** with [pysubs2](https://github.com/tkarabela/pysubs2)
 - **Fast video rendering** using [FFmpeg](https://ffmpeg.org/)
 
-...
-
-...
+---
 
 ## Requirements
 
