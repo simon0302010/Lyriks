@@ -1,23 +1,43 @@
 import json
-import time
 import os
+import time
 
 from google import genai
 from google.genai import types
 
 
-def generate():
+def generate(whisper_transcript, lyrics):
     client = genai.Client(
         api_key=os.environ.get("GEMINI_API_KEY"),
     )
 
     model = "gemini-2.0-flash"
+    
+    prompt = f"""
+Given the following Whisper transcript (with word-level timestamps) and the original song lyrics, generate a JSON array as described below.
+
+Whisper transcript:
+{whisper_transcript}
+
+Original lyrics:
+{lyrics}
+
+Each JSON object should have:
+- "text": the lyric line or segment,
+- "words": an array of objects with "start", "end", and "word" from the transcript,
+- "start": start time of the segment (first word),
+- "end": end time of the segment (last word).
+
+Align each lyric line to the corresponding words and their timestamps. Output a valid JSON array following this schema.
+Fix up the words aswell as the texts to revamp the whole transcript.
+"""
+
     contents = [
         types.Content(
             role="user",
             parts=[
                 types.Part.from_text(
-                    text="""Generate a JSON array of objects, where each object represents a segment of transcribed audio. Each segment should have 'text', 'words' (an array of [start_time, end_time, word_text]), 'start', and 'end' properties. For example, transcribe the following: We are the Champions"""
+                    text=prompt,
                 ),
             ],
         ),
@@ -52,6 +72,7 @@ def generate():
                 required=["text", "words", "start", "end"],
             ),
         ),
+        max_output_tokens=16384
     )
 
     start_time = time.time()
@@ -73,12 +94,11 @@ def generate():
     try:
         result_json = json.loads(result_str)
         print(json.dumps(result_json, indent=2, ensure_ascii=False))
+        return result_json
     except Exception as e:
         print("Failed to parse JSON:", e)
         print("Raw output:")
         print(result_str)
+        return False
 
     print(f"Took: {round(time.time() - start_time, 2)}s")
-
-if __name__ == "__main__":
-    generate()

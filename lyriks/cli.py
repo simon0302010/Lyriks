@@ -9,6 +9,7 @@ import questionary
 from questionary import Style
 
 from .core import video_generator_mp
+from .core import gemini
 
 questionary_style = Style([("pointer", "fg:cyan bold")])
 
@@ -110,11 +111,8 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
 
         if not no_gemini:
             no_gemini = questionary.confirm(
-                "Enable Gemini improvements for Whisper output?"
+                "Disable Gemini improvements for Whisper output?", default=False
             ).ask()
-            if not no_gemini:
-                click.secho("You must specify wheter to use Gemini or not.", fg="red")
-                sys.exit(1)
 
         AudioProcessor = audio_processor.AudioProcessor(
             audio_file, lyrics_file, model_size, device
@@ -144,6 +142,12 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
         click.secho(f"No-silence audio: {str(no_silence_file)}", fg="green")
 
         words = AudioProcessor.map_words_to_original()
+        if not no_gemini:
+            gemini_output = gemini.generate(words, AudioProcessor.lyrics)
+            if gemini_output:
+                words = gemini_output
+            else:
+                click.secho("Gemini failed, using original Lyrics", fg="yellow")
 
         if os.path.exists(vocals_path):
             os.remove(vocals_path)
