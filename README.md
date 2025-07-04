@@ -217,3 +217,31 @@ If you use this in your research, please cite the following:
   doi={10.18637/jss.v031.i07}
 }
 ```
+
+---
+
+## License
+
+This project is licensed under the [GPL-3.0 License](https://www.gnu.org/licenses/gpl-3.0.html).
+
+---
+
+## Contributing
+
+Contributions are welcome!  
+If you have suggestions, bug reports, or want to add features, please open an issue or submit a pull request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes (`git commit -am 'Add new feature'`)
+4. Push to the branch (`git push origin feature/my-feature`)
+5. Open a pull request
+
+---
+
+## Contact
+
+For questions, bug reports, or feedback, please open an [issue on GitHub](https://github.com/simon0302010/Lyriks/issues)  
+or contact the maintainer: **simon0302010** (GitHub username).
+
+---
