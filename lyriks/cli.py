@@ -1,6 +1,7 @@
-import os
-import sys
 import json
+import os
+import shutil
+import sys
 from pathlib import Path
 
 import click
@@ -32,7 +33,12 @@ def main():
 @click.option(
     "--generator", "-g", help="Which generator to use to create the video", default=None
 )
-def generate(audio_file, lyrics_file, output, model_size, device, generator):
+@click.option(
+    "--no-gemini",
+    help="Use this if you don't want Gemini to improve the output of Whisper",
+    is_flag=True,
+)
+def generate(audio_file, lyrics_file, output, model_size, device, generator, no_gemini):
     import io
     from contextlib import redirect_stderr, redirect_stdout
 
@@ -40,7 +46,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
 
     try:
         audio_name = Path(audio_file).stem
-        
+
         if not model_size:
             model_choices = [
                 {"name": "tiny   (fastest, lowest accuracy)", "value": "tiny"},
@@ -57,7 +63,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
             ).ask()
             if not model_size:
                 click.secho("You must specify a model size.", fg="red")
-                sys.exit(0)
+                sys.exit(1)
 
         if not device:
             device_choices = [
@@ -71,7 +77,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
             ).ask()
             if not device:
                 click.secho("You must specify a compute device.", fg="red")
-                sys.exit(0)
+                sys.exit(1)
 
         if not output:
             output = questionary.text(
@@ -79,7 +85,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
             ).ask()
             if not output:
                 click.secho("You must specify an output file name.", fg="red")
-                sys.exit(0)
+                sys.exit(1)
 
         if not generator:
             generator_choices = [
@@ -88,7 +94,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
                     "name": "pysubs2 + ffmpeg (fast, good quality, experimental)",
                     "value": "ps2",
                 },
-                {"name": "Only save transcript (for debugging)", "value": "ts"}
+                {"name": "Only save transcript (for debugging)", "value": "ts"},
             ]
             generator = questionary.select(
                 "Select the video generator backend:",
@@ -97,7 +103,18 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator):
             ).ask()
             if not generator:
                 click.secho("You must specify a video generator backend.", fg="red")
-                sys.exit(0)
+                sys.exit(1)
+            if shutil.which("ffmpeg") is None:
+                click.secho("ffmpeg is not installed or not in PATH")
+                sys.exit(1)
+
+        if not no_gemini:
+            no_gemini = questionary.confirm(
+                "Enable Gemini improvements for Whisper output?"
+            ).ask()
+            if not no_gemini:
+                click.secho("You must specify wheter to use Gemini or not.", fg="red")
+                sys.exit(1)
 
         AudioProcessor = audio_processor.AudioProcessor(
             audio_file, lyrics_file, model_size, device
