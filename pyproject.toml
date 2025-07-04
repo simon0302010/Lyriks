@@ -26,10 +26,12 @@ dependencies = [
     "iso639-lang",
     "matplotlib",
     "pysubs2",
-    "questionary"
+    "questionary",
+    "tqdm"
 ]
 classifiers = [
-    "Operating System :: POSIX :: Linux"
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows"
 ]
 
 [project.urls]
