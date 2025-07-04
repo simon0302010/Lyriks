@@ -107,10 +107,10 @@ You will be interactively prompted in the CLI for any options you leave unspecif
 
 - `--generator`, `-g`  
   Which backend to use for video generation.  
-  *Options:*  
-    - `mp`: MoviePy (slow, low quality, legacy, ~10 fps)  
-    - `ps2`: pysubs2 + ffmpeg (fast, good quality, experimental, ~180 fps)  
-    - `ts`: Only save transcript (for debugging)  
+  *Options:*
+    - `ps2`: pysubs2 + ffmpeg (fast, good quality, experimental, ~180 fps)
+    - `mp`: MoviePy (slow, low quality, legacy, ~10 fps)
+    - `ts`: Only save transcript (for debugging)
 
 - `--no-gemini`  
   Disable Gemini improvements for Whisper output.  
@@ -132,7 +132,7 @@ Note: This process can take up to 5 minutes on lower end hardware.
 - Fancier video styles and effects
 - Add more robust error handling
 - Ask which background to use
-- Procedually generated backgrounds
+- Libary of procedually generated backgrounds
 - Batch processing
 - Loading bars
 - Karaoke function

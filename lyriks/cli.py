@@ -99,11 +99,11 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
         if not generator:
             if is_interactive:
                 generator_choices = [
-                    {"name": "Moviepy (slow, low quality, legacy)", "value": "mp"},
                     {
-                        "name": "pysubs2 + ffmpeg (fast, good quality, experimental)",
+                        "name": "pysubs2 + ffmpeg (fast, good quality)",
                         "value": "ps2",
                     },
+                    {"name": "Moviepy (slow, low quality, legacy)", "value": "mp"},
                     {"name": "Only save transcript (for debugging)", "value": "ts"},
                 ]
                 generator = questionary.select(
