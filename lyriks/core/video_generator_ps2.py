@@ -1,7 +1,10 @@
 import os
 import subprocess
 
+import click
 import pysubs2
+
+from . import ffmpeg
 
 
 class VideoGenerator:
@@ -30,16 +33,10 @@ class VideoGenerator:
         )
         self.filename = None
 
-    def add_words(self, segment, style="Default", resolution="1920x1080"):
-        try:
-            width, height = map(int, resolution.lower().split("x"))
-        except Exception:
-            width, height = 1920, 1080
-
-        x = width // 2
-        y = height // 2
-        pos_tag = rf"{{\an5\pos({x},{y})}}"
+    def add_words(self, segment, style="Default"):
         words = segment["words"]
+        if not words:
+            return
         if words and isinstance(words[0], list):
             words = [{"start": w[0], "end": w[1], "word": w[2]} for w in words]
         full_text = " ".join([w["word"] for w in words])
@@ -50,7 +47,7 @@ class VideoGenerator:
                 pysubs2.SSAEvent(
                     start=int(start * 1000),
                     end=int(end * 1000),
-                    text=pos_tag + r"{\c&HFFFFFF&}" + full_text,
+                    text=r"{\c&HFFFFFF&}" + full_text,
                     style=style,
                 )
             )
@@ -75,7 +72,7 @@ class VideoGenerator:
                 pysubs2.SSAEvent(
                     start=int(w["start"] * 1000),
                     end=int(w["end"] * 1000),
-                    text=pos_tag + text,
+                    text=text,
                     style=style,
                 )
             )
@@ -125,7 +122,7 @@ class VideoGenerator:
             "-f",
             "lavfi",
             "-i",
-            f"color=c=black:s={size}:d={duration if duration else 60}:r={fps}",
+            f"color=c=black:s={size}:d={duration}:r={fps}",
             "-vf",
             f"ass={self.filename}",
             "-c:v",
@@ -134,7 +131,8 @@ class VideoGenerator:
             "yuv420p",
             temp_video,
         ]
-        subprocess.run(ffmpeg_cmd, check=True)
+        click.secho("Rendering video", fg="blue")
+        ffmpeg.ffmpeg_progress(ffmpeg_cmd, duration)
 
         # mix audio and video
         if audio_file:
@@ -155,7 +153,8 @@ class VideoGenerator:
                 "-shortest",
                 final_output,
             ]
-            subprocess.run(ffmpeg_mux_cmd, check=True)
+            click.secho("Adding audio to video", fg="blue")
+            ffmpeg.ffmpeg_progress(ffmpeg_mux_cmd, duration)
             # remove temp video
             os.remove(temp_video)
         else:
