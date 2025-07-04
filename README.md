@@ -2,7 +2,6 @@
 ![PyPI - License](https://img.shields.io/pypi/l/lyriks-video)
 ![](https://hackatime-badge.hackclub.com/U08HC7N4JJW/Lyriks)
 
-
 <div align="left">
   <a href="https://shipwrecked.hackclub.com/?t=ghrm" target="_blank">
     <img src="https://hc-cdn.hel1.your-objectstorage.com/s/v3/739361f1d440b17fc9e2f74e49fc185d86cbec14_badge.png" 
@@ -10,7 +9,6 @@
          style="width: 35%;">
   </a>
 </div>
-
 
 # Lyriks
 
@@ -23,8 +21,12 @@ Lyriks is an automated lyrics video generator. It transcribes the audio and auto
 - **Automatic vocal separation** using [Demucs](https://github.com/facebookresearch/demucs)
 - **Transcription** with [OpenAI Whisper](https://github.com/openai/whisper) and [whisper-timestamped](https://github.com/linto-ai/whisper-timestamped)
 - **Synchronized lyrics video** generation with [MoviePy](https://zulko.github.io/moviepy/)
+- **ASS subtitle generation** with [pysubs2](https://github.com/tkarabela/pysubs2)
+- **Fast video rendering** using [FFmpeg](https://ffmpeg.org/)
 
----
+...
+
+...
 
 ## Requirements
 
@@ -32,6 +34,27 @@ Lyriks is an automated lyrics video generator. It transcribes the audio and auto
 - An NVIDIA GPU (recommended for best performance; CPU is supported but slower)
 - 10GB of free disk space
 - Python 3.11
+- ffmpeg
+
+### Installing FFmpeg
+
+On **Ubuntu/Debian**:
+```bash
+sudo apt update
+sudo apt install ffmpeg
+```
+
+On **Arch Linux**:
+```bash
+sudo pacman -S ffmpeg
+```
+
+On **macOS** (with Homebrew):
+```bash
+brew install ffmpeg
+```
+
+For other platforms and more details, see the [FFmpeg download page](https://ffmpeg.org/download.html).
 
 ---
 
@@ -87,8 +110,8 @@ You will be interactively prompted in the CLI for any options you leave unspecif
 - `--generator`, `-g`  
   Which backend to use for video generation.  
   *Options:*  
-    - `mp`: MoviePy (slow, low quality, legacy)  
-    - `ps2`: pysubs2 + ffmpeg (fast, good quality, experimental)  
+    - `mp`: MoviePy (slow, low quality, legacy, ~10 fps)  
+    - `ps2`: pysubs2 + ffmpeg (fast, good quality, experimental, ~180 fps)  
     - `ts`: Only save transcript (for debugging)  
 
 - `--no-gemini`  
@@ -111,9 +134,11 @@ Note: This process can take up to 5 minutes on lower end hardware.
 - Fancier video styles and effects
 - Add more robust error handling
 - Ask which background to use
+- Procedually generated backgrounds
 - Batch processing
 - Loading bars
 - Karaoke function
+- Automatic upload to YouTube
 
 ---
 
@@ -127,7 +152,17 @@ Note: This process can take up to 5 minutes on lower end hardware.
 
 ## Credits
 
-This project uses [Demucs](https://github.com/facebookresearch/demucs) for music vocal separation.
+This project uses:
+- [Demucs](https://github.com/facebookresearch/demucs) for music vocal separation.
+- [whisper-timestamped](https://github.com/linto-ai/whisper-timestamped) for word-level timestamped transcription.
+
+---
+
+## Citations
+
+If you use this in your research, please cite the following:
+
+### Demucs
 
 ```bibtex
 @inproceedings{rouard2022hybrid,
@@ -142,5 +177,43 @@ This project uses [Demucs](https://github.com/facebookresearch/demucs) for music
   author={D{'e}fossez, Alexandre},
   booktitle={Proceedings of the ISMIR 2021 Workshop on Music Source Separation},
   year={2021}
+}
+```
+
+### whisper-timestamped
+
+```bibtex
+@misc{lintoai2023whispertimestamped,
+  title={whisper-timestamped},
+  author={Louradour, J{\'e}r{\^o}me},
+  journal={GitHub repository},
+  year={2023},
+  publisher={GitHub},
+  howpublished = {\url{https://github.com/linto-ai/whisper-timestamped}}
+}
+```
+
+### OpenAI Whisper
+
+```bibtex
+@article{radford2022robust,
+  title={Robust speech recognition via large-scale weak supervision},
+  author={Radford, Alec and Kim, Jong Wook and Xu, Tao and Brockman, Greg and McLeavey, Christine and Sutskever, Ilya},
+  journal={arXiv preprint arXiv:2212.04356},
+  year={2022}
+}
+```
+
+### Dynamic-Time-Warping
+
+```bibtex
+@article{JSSv031i07,
+  title={Computing and Visualizing Dynamic Time Warping Alignments in R: The dtw Package},
+  author={Giorgino, Toni},
+  journal={Journal of Statistical Software},
+  year={2009},
+  volume={31},
+  number={7},
+  doi={10.18637/jss.v031.i07}
 }
 ```
