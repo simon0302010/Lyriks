@@ -29,6 +29,8 @@ class AudioProcessor:
         self.vocals_file = None
         self.model = whisper.load_model(self.model_size, device=self.device)
         self.temp_dir = Path(tempfile.mkdtemp())
+        self.demucs_model = get_model("htdemucs").to(self.device)
+        self.demucs_model.eval()
 
     def transcribe(self):
         # check which audios exist and choose one
@@ -63,22 +65,19 @@ class AudioProcessor:
         return self.transcript, self.words
 
     def isolate_vocals(self):
-        model = get_model("htdemucs").to(self.device)
-        model.eval()
-
         wav = AudioFile(Path(self.audio_file)).read(
-            streams=0, samplerate=model.samplerate, channels=model.audio_channels
+            streams=0, samplerate=self.demucs_model.samplerate, channels=self.demucs_model.audio_channels
         )
         wav = wav.float().unsqueeze(0).to(self.device)
 
         with torch.no_grad():
-            sources = apply_model(model, wav, device=self.device)[0]
+            sources = apply_model(self.demucs_model, wav, device=self.device)[0]
 
-        vocals_idx = model.sources.index("vocals")
+        vocals_idx = self.demucs_model.sources.index("vocals")
         vocals = sources[vocals_idx].detach().cpu().numpy().T
 
         self.vocals_file = str(self.temp_dir / "vocals.wav")
-        sf.write(self.vocals_file, vocals, model.samplerate)
+        sf.write(self.vocals_file, vocals, self.demucs_model.samplerate)
 
         return self.vocals_file
 

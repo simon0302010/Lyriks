@@ -89,11 +89,10 @@ class VideoGenerator:
         self.subs.save(self.filename)
         return self.filename
 
-    def render_video(self, output_file_name, audio_file=None, size="1920x1080", fps=30):
+    def render_video(self, output_file_name, audio_file=None, size="1920x1080", fps=30, duration=60):
         if not hasattr(self, "filename"):
             print("Please save subtitles first.")
             return
-        duration = None
         if audio_file:
             # use ffprobe to get audio duration
             cmd = [
@@ -110,9 +109,10 @@ class VideoGenerator:
                 cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
             )
             try:
-                duration = float(result.stdout.strip())
-            except Exception:
-                duration = None
+                duration = round(float(result.stdout.strip()), 1)
+            except Exception as e:
+                click.secho(f"Error while retrieving audio details: {e}")
+                return
 
         # render with subtitles
         temp_video = output_file_name + "_temp.mp4"

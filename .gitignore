@@ -197,3 +197,4 @@ cython_debug/
 test.py
 out.json
 output.mp4
+song.mp4

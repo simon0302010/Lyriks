@@ -140,6 +140,11 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
             stdout_output = stdout_buffer.getvalue()
             stderr_output = stderr_buffer.getvalue()
 
+            if stdout_output.strip():
+                click.secho(stdout_output.strip(), fg="white")
+            if stderr_output.strip():
+                click.secho(stderr_output.strip(), fg="yellow")
+
             if (
                 "Got start time outside of audio boundary" in stdout_output
                 or "Got start time outside of audio boundary" in stderr_output
@@ -151,8 +156,8 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
             else:
                 break
 
-        click.secho(f"Vocals path: {str(vocals_path)}", fg="green")
-        click.secho(f"No-silence audio: {str(no_silence_file)}", fg="green")
+        click.secho(f"Vocals path: {str(vocals_path)}", fg="blue")
+        click.secho(f"No-silence audio: {str(no_silence_file)}", fg="blue")
 
         words = AudioProcessor.map_words_to_original()
         if not no_gemini:
