@@ -1,0 +1,182 @@
+<svg width="1300" height="1850" xmlns="http://www.w3.org/2000/svg">
+    <!-- Made with Gemini -->
+    <defs>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&amp;display=swap');
+            .container {
+                font-family: 'Roboto', sans-serif;
+                font-size: 14px;
+            }
+            .label {
+                fill: #e0e0e0;
+                text-anchor: middle;
+                dominant-baseline: middle;
+                font-weight: 400;
+            }
+            .label-bold {
+                font-weight: 700;
+                fill: #ffffff;
+            }
+            .connector {
+                stroke: #6c757d;
+                stroke-width: 2;
+                fill: none;
+            }
+            .connector-dashed {
+                stroke-dasharray: 5, 5;
+            }
+            .shape {
+                stroke-width: 2;
+                transition: all 0.3s ease;
+            }
+            .start-end { fill: #495057; stroke: #6c757d; }
+            .io { fill: #004d40; stroke: #00796b; }
+            .process { fill: #1a237e; stroke: #3f51b5; }
+            .decision { fill: #b71c1c; stroke: #f44336; }
+            .sub-process { fill: #0d47a1; stroke: #2196f3; }
+            .api-call { fill: #551a8b; stroke: #8e24aa; }
+            .output { fill: #00695c; stroke: #009688; }
+            .bg { fill: #121212; }
+        </style>
+        <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#6c757d" />
+        </marker>
+    </defs>
+
+    <rect width="100%" height="100%" class="bg" />
+
+    <g class="container">
+        <!-- Start -->
+        <ellipse cx="650" cy="50" rx="100" ry="30" class="shape start-end" />
+        <text x="650" y="50" class="label label-bold">Start</text>
+        <line x1="650" y1="80" x2="650" y2="110" class="connector" marker-end="url(#arrow)" />
+
+        <!-- Input -->
+        <path d="M 400 110 L 900 110 L 870 170 L 370 170 Z" class="shape io" />
+        <text x="650" y="140" class="label">
+            <tspan x="650" dy="-8">User Input: audio, lyrics, and options</tspan>
+            <tspan x="650" dy="1.2em">(--output, --model, etc.)</tspan>
+        </text>
+        <line x1="650" y1="170" x2="650" y2="200" class="connector" marker-end="url(#arrow)" />
+
+        <!-- Interactive Check -->
+        <path d="M 650 200 L 750 250 L 650 300 L 550 250 Z" class="shape decision" />
+        <text x="650" y="250" class="label">Interactive Mode?</text>
+        <line x1="750" y1="250" x2="850" y2="250" class="connector" marker-end="url(#arrow)" />
+        <text x="800" y="240" class="label">[No]</text>
+        <line x1="650" y1="300" x2="650" y2="330" class="connector" marker-end="url(#arrow)" />
+        <text x="670" y="315" class="label">[Yes]</text>
+
+        <!-- Non-interactive branch -->
+        <path d="M 850 210 L 950 250 L 850 290 L 750 250 Z" class="shape decision" />
+        <text x="850" y="250" class="label">All Options Set?</text>
+        <line x1="850" y1="290" x2="850" y2="340" class="connector" marker-end="url(#arrow)" />
+        <text x="870" y="315" class="label">[No]</text>
+        <rect x="800" y="340" width="100" height="50" rx="5" class="shape start-end" />
+        <text x="850" y="365" class="label">Error &amp; Exit</text>
+        <line x1="950" y1="250" x2="1000" y2="250" class="connector" />
+        <line x1="1000" y1="250" x2="1000" y2="450" class="connector" />
+        <line x1="1000" y1="450" x2="650" y2="450" class="connector" marker-end="url(#arrow)" />
+        <text x="970" y="240" class="label">[Yes]</text>
+
+        <!-- Interactive branch -->
+        <rect x="550" y="330" width="200" height="50" rx="5" class="shape process" />
+        <text x="650" y="355" class="label">Prompt for missing options</text>
+        <line x1="650" y1="380" x2="650" y2="420" class="connector" marker-end="url(#arrow)" />
+
+        <!-- Main Flow -->
+        <rect x="500" y="480" width="300" height="50" rx="5" class="shape process" />
+        <text x="650" y="505" class="label">Initialize AudioProcessor</text>
+        <line x1="650" y1="530" x2="650" y2="560" class="connector" marker-end="url(#arrow)" />
+
+        <rect x="500" y="560" width="300" height="50" rx="5" class="shape sub-process" />
+        <text x="650" y="585" class="label">1. Isolate Vocals (Demucs)</text>
+        <line x1="650" y1="610" x2="650" y2="640" class="connector" marker-end="url(#arrow)" />
+
+        <rect x="500" y="640" width="300" height="50" rx="5" class="shape sub-process" />
+        <text x="650" y="665" class="label">2. Remove Silence from Vocals</text>
+        <line x1="650" y1="690" x2="650" y2="720" class="connector" marker-end="url(#arrow)" />
+
+        <rect x="500" y="720" width="300" height="50" rx="5" class="shape sub-process" />
+        <text x="650" y="745" class="label">3. Transcribe (Whisper)</text>
+        <line x1="650" y1="770" x2="650" y2="800" class="connector" marker-end="url(#arrow)" />
+
+        <rect x="500" y="800" width="300" height="50" rx="5" class="shape sub-process" />
+        <text x="650" y="825" class="label">4. Map Timestamps to Original</text>
+        <line x1="650" y1="850" x2="650" y2="880" class="connector" marker-end="url(#arrow)" />
+
+        <!-- Gemini Check -->
+        <path d="M 650 880 L 770 930 L 650 980 L 530 930 Z" class="shape decision" />
+        <text x="650" y="930" class="label">--no-gemini flag?</text>
+        <line x1="770" y1="930" x2="1050" y2="930" class="connector" />
+        <line x1="1050" y1="930" x2="1050" y2="1150" class="connector" />
+        <line x1="1050" y1="1150" x2="650" y2="1150" class="connector" marker-end="url(#arrow)" />
+        <text x="820" y="920" class="label">[Yes]</text>
+        <line x1="650" y1="980" x2="650" y2="1010" class="connector" marker-end="url(#arrow)" />
+        <text x="670" y="995" class="label">[No]</text>
+
+        <!-- Gemini Branch -->
+        <rect x="500" y="1010" width="300" height="50" rx="5" class="shape api-call" />
+        <text x="650" y="1035" class="label">Send to Gemini API</text>
+        <line x1="650" y1="1060" x2="650" y2="1090" class="connector" marker-end="url(#arrow)" />
+        <rect x="500" y="1090" width="300" height="50" rx="5" class="shape io" />
+        <text x="650" y="1115" class="label">Receive Improved Transcript</text>
+        <line x1="650" y1="1140" x2="650" y2="1180" class="connector" marker-end="url(#arrow)" />
+
+        <!-- Generator Check -->
+        <path d="M 650 1210 L 800 1285 L 650 1360 L 500 1285 Z" class="shape decision" />
+        <text x="650" y="1285" class="label">Chosen --generator?</text>
+
+        <!-- Generator Branches -->
+        <line x1="650" y1="1360" x2="650" y2="1400" class="connector" />
+        <line x1="250" y1="1400" x2="1050" y2="1400" class="connector" />
+        
+        <!-- TS Branch -->
+        <line x1="250" y1="1400" x2="250" y2="1430" class="connector" marker-end="url(#arrow)" />
+        <text x="250" y="1380" class="label">[ts]</text>
+        <rect x="150" y="1430" width="200" height="50" rx="5" class="shape process" />
+        <text x="250" y="1455" class="label">Save transcript to file</text>
+        <line x1="250" y1="1480" x2="250" y2="1650" class="connector" marker-end="url(#arrow)" />
+        <path d="M 175 1650 L 325 1650 L 300 1700 L 150 1700 Z" class="shape output" />
+        <text x="250" y="1675" class="label">output.json</text>
+
+        <!-- MP Branch -->
+        <line x1="650" y1="1400" x2="650" y2="1430" class="connector" marker-end="url(#arrow)" />
+        <text x="650" y="1380" class="label">[mp]</text>
+        <rect x="550" y="1430" width="200" height="50" rx="5" class="shape process" />
+        <text x="650" y="1455" class="label">Init MoviePy Generator</text>
+        <line x1="650" y1="1480" x2="650" y2="1510" class="connector" marker-end="url(#arrow)" />
+        <rect x="550" y="1510" width="200" height="50" rx="5" class="shape sub-process" />
+        <text x="650" y="1535" class="label">Add text clips</text>
+        <line x1="650" y1="1560" x2="650" y2="1590" class="connector" marker-end="url(#arrow)" />
+        <rect x="550" y="1590" width="200" height="50" rx="5" class="shape sub-process" />
+        <text x="650" y="1615" class="label">Render with MoviePy</text>
+        <line x1="650" y1="1640" x2="650" y2="1650" class="connector" marker-end="url(#arrow)" />
+        <path d="M 575 1650 L 725 1650 L 700 1700 L 550 1700 Z" class="shape output" />
+        <text x="650" y="1675" class="label">output.mp4</text>
+
+        <!-- PS2 Branch -->
+        <line x1="1050" y1="1400" x2="1050" y2="1430" class="connector" marker-end="url(#arrow)" />
+        <text x="1050" y="1380" class="label">[ps2]</text>
+        <rect x="950" y="1430" width="200" height="50" rx="5" class="shape process" />
+        <text x="1050" y="1455" class="label">Init pysubs2 Generator</text>
+        <line x1="1050" y1="1480" x2="1050" y2="1510" class="connector" marker-end="url(#arrow)" />
+        <rect x="950" y="1510" width="200" height="50" rx="5" class="shape sub-process" />
+        <text x="1050" y="1535" class="label">Create .ass events</text>
+        <line x1="1050" y1="1560" x2="1050" y2="1590" class="connector" marker-end="url(#arrow)" />
+        <rect x="950" y="1590" width="200" height="50" rx="5" class="shape sub-process" />
+        <text x="1050" y="1615" class="label">Render with FFmpeg</text>
+        <line x1="1050" y1="1640" x2="1050" y2="1650" class="connector" marker-end="url(#arrow)" />
+        <path d="M 975 1650 L 1125 1650 L 1100 1700 L 950 1700 Z" class="shape output" />
+        <text x="1050" y="1675" class="label">output.mp4</text>
+
+        <!-- End -->
+        <line x1="250" y1="1700" x2="250" y2="1750" class="connector" />
+        <line x1="650" y1="1700" x2="650" y2="1750" class="connector" />
+        <line x1="1050" y1="1700" x2="1050" y2="1750" class="connector" />
+        <line x1="250" y1="1750" x2="1050" y2="1750" class="connector" />
+        <line x1="650" y1="1750" x2="650" y2="1780" class="connector" marker-end="url(#arrow)" />
+        <ellipse cx="650" cy="1810" rx="100" ry="30" class="shape start-end" />
+        <text x="650" y="1810" class="label label-bold">End</text>
+    </g>
+</svg>
