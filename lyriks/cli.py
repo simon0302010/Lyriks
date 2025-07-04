@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 import sys
 from pathlib import Path
 
@@ -8,8 +7,7 @@ import click
 import questionary
 from questionary import Style
 
-from .core import video_generator_mp
-from .core import gemini
+from .core import gemini, video_generator_mp
 
 questionary_style = Style([("pointer", "fg:cyan bold")])
 
@@ -53,7 +51,10 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
             if is_interactive:
                 model_choices = [
                     {"name": "tiny   (fastest, lowest accuracy)", "value": "tiny"},
-                    {"name": "base   (fast, slightly better accuracy)", "value": "base"},
+                    {
+                        "name": "base   (fast, slightly better accuracy)",
+                        "value": "base",
+                    },
                     {"name": "small  (fast, good accuracy)", "value": "small"},
                     {"name": "medium (balanced)", "value": "medium"},
                     {"name": "large  (slowest, highest accuracy)", "value": "large"},
@@ -193,6 +194,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
 
     except Exception as e:
         import traceback
+
         click.secho(f"An error occurred: {e}", fg="red")
         click.secho(traceback.format_exc(), fg="red")
 

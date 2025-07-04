@@ -71,7 +71,7 @@ Fix up the words aswell as the texts to revamp the whole transcript.
                 required=["text", "words", "start", "end"],
             ),
         ),
-        max_output_tokens=16384
+        max_output_tokens=16384,
     )
 
     start_time = time.time()
