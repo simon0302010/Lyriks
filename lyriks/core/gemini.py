@@ -94,7 +94,7 @@ MAKE 100% SURE THAT YOU HAVE TIMESTAMPS + CORRECT LYRICS AT THE END!
     # parse json
     try:
         result_json = json.loads(result_str)
-        #print(json.dumps(result_json, indent=2, ensure_ascii=False))
+        # print(json.dumps(result_json, indent=2, ensure_ascii=False))
         return result_json
     except Exception as e:
         print("Failed to parse JSON:", e)

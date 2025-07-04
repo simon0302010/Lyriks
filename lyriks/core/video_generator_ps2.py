@@ -1,6 +1,8 @@
-import pysubs2
-import subprocess
 import os
+import subprocess
+
+import pysubs2
+
 
 class VideoGenerator:
     def __init__(
@@ -27,7 +29,7 @@ class VideoGenerator:
             alignment=alignment,
         )
         self.filename = None
-        
+
     def add_words(self, segment, style="Default", resolution="1920x1080"):
         try:
             width, height = map(int, resolution.lower().split("x"))
@@ -36,7 +38,7 @@ class VideoGenerator:
 
         x = width // 2
         y = height // 2
-        pos_tag = fr"{{\an5\pos({x},{y})}}"
+        pos_tag = rf"{{\an5\pos({x},{y})}}"
         words = segment["words"]
         if words and isinstance(words[0], list):
             words = [{"start": w[0], "end": w[1], "word": w[2]} for w in words]
@@ -49,7 +51,7 @@ class VideoGenerator:
                     start=int(start * 1000),
                     end=int(end * 1000),
                     text=pos_tag + r"{\c&HFFFFFF&}" + full_text,
-                    style=style
+                    style=style,
                 )
             )
 
@@ -74,7 +76,7 @@ class VideoGenerator:
                     start=int(w["start"] * 1000),
                     end=int(w["end"] * 1000),
                     text=pos_tag + text,
-                    style=style
+                    style=style,
                 )
             )
             if i < len(words) - 1:
@@ -84,12 +86,12 @@ class VideoGenerator:
                     add_white(gap_start, gap_end)
         if segment_end < segment["end"]:
             add_white(segment_end, segment["end"])
-            
+
     def save(self, folder):
         self.filename = str(folder / "lyrics.ass")
         self.subs.save(self.filename)
         return self.filename
-    
+
     def render_video(self, output_file_name, audio_file=None, size="1920x1080", fps=30):
         if not hasattr(self, "filename"):
             print("Please save subtitles first.")
@@ -98,11 +100,18 @@ class VideoGenerator:
         if audio_file:
             # use ffprobe to get audio duration
             cmd = [
-                "ffprobe", "-v", "error", "-show_entries",
-                "format=duration", "-of",
-                "default=noprint_wrappers=1:nokey=1", str(audio_file)
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+                str(audio_file),
             ]
-            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            result = subprocess.run(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            )
             try:
                 duration = float(result.stdout.strip())
             except Exception:
@@ -113,11 +122,16 @@ class VideoGenerator:
         ffmpeg_cmd = [
             "ffmpeg",
             "-y",
-            "-f", "lavfi",
-            "-i", f"color=c=black:s={size}:d={duration if duration else 60}:r={fps}",
-            "-vf", f"ass={self.filename}",
-            "-c:v", "libx264",
-            "-pix_fmt", "yuv420p",
+            "-f",
+            "lavfi",
+            "-i",
+            f"color=c=black:s={size}:d={duration if duration else 60}:r={fps}",
+            "-vf",
+            f"ass={self.filename}",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
             temp_video,
         ]
         subprocess.run(ffmpeg_cmd, check=True)
@@ -128,11 +142,16 @@ class VideoGenerator:
             ffmpeg_mux_cmd = [
                 "ffmpeg",
                 "-y",
-                "-i", temp_video,
-                "-i", str(audio_file),
-                "-c:v", "copy",
-                "-c:a", "aac",
-                "-b:a", "192k",
+                "-i",
+                temp_video,
+                "-i",
+                str(audio_file),
+                "-c:v",
+                "copy",
+                "-c:a",
+                "aac",
+                "-b:a",
+                "192k",
                 "-shortest",
                 final_output,
             ]

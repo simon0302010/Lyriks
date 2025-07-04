@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -58,7 +59,10 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
                     {"name": "small  (fast, good accuracy)", "value": "small"},
                     {"name": "medium (balanced)", "value": "medium"},
                     {"name": "large  (slowest, highest accuracy)", "value": "large"},
-                    {"name": "turbo  (very fast, accurate, experimental)", "value": "turbo"},
+                    {
+                        "name": "turbo  (very fast, accurate, experimental)",
+                        "value": "turbo",
+                    },
                 ]
                 model_size = questionary.select(
                     "Select the Whisper model size:",
@@ -140,7 +144,10 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
                 "Got start time outside of audio boundary" in stdout_output
                 or "Got start time outside of audio boundary" in stderr_output
             ):
-                click.secho(f"Warning: Retrying transcription process ({str(i + 1)}/3).", fg="yellow")
+                click.secho(
+                    f"Warning: Retrying transcription process ({str(i + 1)}/3).",
+                    fg="yellow",
+                )
             else:
                 break
 
@@ -163,7 +170,6 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
 
         temp_dir = AudioProcessor.temp_dir
         success = False
-        outfile = False
 
         if generator == "mp":
             VideoGenerator = video_generator_mp.VideoGenerator(audio_file)
@@ -178,7 +184,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
             VideoGenerator = video_generator_ps2.VideoGenerator()
             for segment in words:
                 VideoGenerator.add_words(segment)
-            outfile = VideoGenerator.save(temp_dir)
+            VideoGenerator.save(temp_dir)
             VideoGenerator.render_video(output, audio_file)
             click.secho("Video created using pysubs2 + ffmpeg.", fg="green")
             success = True
@@ -196,9 +202,8 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
         else:
             click.secho("One or more errors occurred during processing.", fg="red")
 
-        if outfile:
-            if os.path.exists(outfile):
-                os.remove(outfile)
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
 
     except Exception as e:
         import traceback
