@@ -47,72 +47,77 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
 
     try:
         audio_name = Path(audio_file).stem
+        is_interactive = sys.stdin.isatty()
 
         if not model_size:
-            model_choices = [
-                {"name": "tiny   (fastest, lowest accuracy)", "value": "tiny"},
-                {"name": "base   (fast, slightly better accuracy)", "value": "base"},
-                {"name": "small  (fast, good accuracy)", "value": "small"},
-                {"name": "medium (balanced)", "value": "medium"},
-                {"name": "large  (slowest, highest accuracy)", "value": "large"},
-                {"name": "turbo  (very fast, accurate)", "value": "turbo"},
-            ]
-            model_size = questionary.select(
-                "Select the Whisper model size:",
-                choices=model_choices,
-                style=questionary_style,
-            ).ask()
-            if not model_size:
+            if is_interactive:
+                model_choices = [
+                    {"name": "tiny   (fastest, lowest accuracy)", "value": "tiny"},
+                    {"name": "base   (fast, slightly better accuracy)", "value": "base"},
+                    {"name": "small  (fast, good accuracy)", "value": "small"},
+                    {"name": "medium (balanced)", "value": "medium"},
+                    {"name": "large  (slowest, highest accuracy)", "value": "large"},
+                    {"name": "turbo  (very fast, accurate)", "value": "turbo"},
+                ]
+                model_size = questionary.select(
+                    "Select the Whisper model size:",
+                    choices=model_choices,
+                    style=questionary_style,
+                ).ask()
+            else:
                 click.secho("You must specify a model size.", fg="red")
                 sys.exit(1)
 
         if not device:
-            device_choices = [
-                {"name": "NVIDIA GPU (CUDA)", "value": "cuda"},
-                {"name": "CPU", "value": "cpu"},
-            ]
-            device = questionary.select(
-                "Select the compute device:",
-                choices=device_choices,
-                style=questionary_style,
-            ).ask()
-            if not device:
+            if is_interactive:
+                device_choices = [
+                    {"name": "NVIDIA GPU (CUDA)", "value": "cuda"},
+                    {"name": "CPU", "value": "cpu"},
+                ]
+                device = questionary.select(
+                    "Select the compute device:",
+                    choices=device_choices,
+                    style=questionary_style,
+                ).ask()
+            else:
                 click.secho("You must specify a compute device.", fg="red")
                 sys.exit(1)
 
         if not output:
-            output = questionary.text(
-                "Output video file name (without extension):", default=audio_name
-            ).ask()
-            if not output:
-                click.secho("You must specify an output file name.", fg="red")
-                sys.exit(1)
+            if is_interactive:
+                output = questionary.text(
+                    "Output video file name (without extension):", default=audio_name
+                ).ask()
+            else:
+                output = audio_name
 
         if not generator:
-            generator_choices = [
-                {"name": "Moviepy (slow, low quality)", "value": "mp"},
-                {
-                    "name": "pysubs2 + ffmpeg (fast, good quality, experimental)",
-                    "value": "ps2",
-                },
-                {"name": "Only save transcript (for debugging)", "value": "ts"},
-            ]
-            generator = questionary.select(
-                "Select the video generator backend:",
-                choices=generator_choices,
-                style=questionary_style,
-            ).ask()
-            if not generator:
+            if is_interactive:
+                generator_choices = [
+                    {"name": "Moviepy (slow, low quality)", "value": "mp"},
+                    {
+                        "name": "pysubs2 + ffmpeg (fast, good quality, experimental)",
+                        "value": "ps2",
+                    },
+                    {"name": "Only save transcript (for debugging)", "value": "ts"},
+                ]
+                generator = questionary.select(
+                    "Select the video generator backend:",
+                    choices=generator_choices,
+                    style=questionary_style,
+                ).ask()
+            else:
                 click.secho("You must specify a video generator backend.", fg="red")
                 sys.exit(1)
-            if shutil.which("ffmpeg") is None:
-                click.secho("ffmpeg is not installed or not in PATH")
-                sys.exit(1)
 
-        if not no_gemini:
+        if not no_gemini and is_interactive:
             no_gemini = questionary.confirm(
                 "Disable Gemini improvements for Whisper output?", default=False
             ).ask()
+
+        if not no_gemini and not os.environ.get("GEMINI_API_KEY"):
+            click.secho("GEMINI_API_KEY environment variable not set.", fg="red")
+            sys.exit(1)
 
         AudioProcessor = audio_processor.AudioProcessor(
             audio_file, lyrics_file, model_size, device
@@ -187,7 +192,9 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
             click.secho("One or more errors occurred during processing.", fg="red")
 
     except Exception as e:
-        click.secho(f"Error: {str(e)}", fg="red")
+        import traceback
+        click.secho(f"An error occurred: {e}", fg="red")
+        click.secho(traceback.format_exc(), fg="red")
 
 
 if __name__ == "__main__":

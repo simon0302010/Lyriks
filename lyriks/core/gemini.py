@@ -11,8 +11,7 @@ def generate(whisper_transcript, lyrics):
         api_key=os.environ.get("GEMINI_API_KEY"),
     )
 
-    model = "gemini-2.0-flash"
-    
+    model = "gemini-1.5-flash"
     prompt = f"""
 Given the following Whisper transcript (with word-level timestamps) and the original song lyrics, generate a JSON array as described below.
 
