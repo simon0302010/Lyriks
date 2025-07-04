@@ -95,7 +95,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
         if not generator:
             if is_interactive:
                 generator_choices = [
-                    {"name": "Moviepy (slow, low quality)", "value": "mp"},
+                    {"name": "Moviepy (slow, low quality, legacy)", "value": "mp"},
                     {
                         "name": "pysubs2 + ffmpeg (fast, good quality, experimental)",
                         "value": "ps2",
@@ -140,7 +140,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
                 "Got start time outside of audio boundary" in stdout_output
                 or "Got start time outside of audio boundary" in stderr_output
             ):
-                click.secho(f"Warning: Retrying process ({str(i + 1)}/3).", fg="yellow")
+                click.secho(f"Warning: Retrying transcription process ({str(i + 1)}/3).", fg="yellow")
             else:
                 break
 
@@ -152,7 +152,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
             gemini_output = gemini.generate(words, AudioProcessor.lyrics)
             if gemini_output:
                 words = gemini_output
-                click.secho("Gemini succeeded", fg="green")
+                click.secho("Gemini succeeded.", fg="green")
             else:
                 click.secho("Gemini failed, using original Lyrics", fg="yellow")
 
@@ -163,6 +163,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
 
         temp_dir = AudioProcessor.temp_dir
         success = False
+        outfile = False
 
         if generator == "mp":
             VideoGenerator = video_generator_mp.VideoGenerator(audio_file)
@@ -178,7 +179,9 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
             for segment in words:
                 VideoGenerator.add_words(segment)
             outfile = VideoGenerator.save(temp_dir)
-            click.secho(f"Saved subtitles to {outfile}")
+            VideoGenerator.render_video(output, audio_file)
+            click.secho("Video created using pysubs2 + ffmpeg.", fg="green")
+            success = True
         elif generator == "ts":
             click.secho("Only saving transcript.", fg="green")
             with open(output + ".json", "w") as file:
@@ -192,6 +195,10 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
             click.secho("Processing completed successfully!", fg="green")
         else:
             click.secho("One or more errors occurred during processing.", fg="red")
+
+        if outfile:
+            if os.path.exists(outfile):
+                os.remove(outfile)
 
     except Exception as e:
         import traceback

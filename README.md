@@ -87,7 +87,7 @@ You will be interactively prompted in the CLI for any options you leave unspecif
 - `--generator`, `-g`  
   Which backend to use for video generation.  
   *Options:*  
-    - `mp`: MoviePy (slow, low quality)  
+    - `mp`: MoviePy (slow, low quality, legacy)  
     - `ps2`: pysubs2 + ffmpeg (fast, good quality, experimental)  
     - `ts`: Only save transcript (for debugging)  
 
@@ -108,12 +108,13 @@ Note: This process can take up to 20 minutes on lower end hardware.
 
 ## TODO
 
-- Fix up lyrics using Gemini
 - Per-word highlighting in videos
 - Fancier video styles and effects
 - Add more robust error handling
 - Ask which background to use
 - Batch processing
+- Loading bars
+- Karaoke function
 
 ---
 
