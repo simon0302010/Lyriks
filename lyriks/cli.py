@@ -7,7 +7,7 @@ import click
 import questionary
 from questionary import Style
 
-from .core import gemini, video_generator_mp
+from .core import gemini, video_generator_mp, video_generator_ps2
 
 questionary_style = Style([("pointer", "fg:cyan bold")])
 
@@ -152,6 +152,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
             gemini_output = gemini.generate(words, AudioProcessor.lyrics)
             if gemini_output:
                 words = gemini_output
+                click.secho("Gemini succeeded", fg="green")
             else:
                 click.secho("Gemini failed, using original Lyrics", fg="yellow")
 
@@ -173,11 +174,11 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
             click.secho("Video created using MoviePy.", fg="green")
             success = True
         elif generator == "ps2":
-            click.secho(
-                "Video creation with pysubs2 + ffmpeg is selected (feature coming soon).",
-                fg="yellow",
-            )
-            success = False
+            VideoGenerator = video_generator_ps2.VideoGenerator()
+            for segment in words:
+                VideoGenerator.add_words(segment)
+            outfile = VideoGenerator.save(temp_dir)
+            click.secho(f"Saved subtitles to {outfile}")
         elif generator == "ts":
             click.secho("Only saving transcript.", fg="green")
             with open(output + ".json", "w") as file:

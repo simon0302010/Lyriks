@@ -28,7 +28,7 @@ Each JSON object should have:
 - "end": end time of the segment (last word).
 
 Align each lyric line to the corresponding words and their timestamps. Output a valid JSON array following this schema.
-Fix up the words aswell as the texts to revamp the whole transcript.
+YOU HAVE TO IMPROVE BOTH THE WORDS AND TEXTS!
 """
 
     contents = [
