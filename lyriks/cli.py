@@ -38,7 +38,23 @@ def main():
     help="Use this if you don't want Gemini to improve the output of Whisper",
     is_flag=True,
 )
-def generate(audio_file, lyrics_file, output, model_size, device, generator, no_gemini):
+@click.option(
+    "--background",
+    "-b",
+    help="Optional background video file for the video (must be a video the same length or longer than the audio).",
+    default=None,
+    type=click.Path(exists=True, path_type=Path),
+)
+def generate(
+    audio_file,
+    lyrics_file,
+    output,
+    model_size,
+    device,
+    generator,
+    no_gemini,
+    background,
+):
     import io
     from contextlib import redirect_stderr, redirect_stdout
 
@@ -128,6 +144,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
             audio_file, lyrics_file, model_size, device
         )
 
+        # process audio
         for i in range(3):
             stdout_buffer = io.StringIO()
             stderr_buffer = io.StringIO()
@@ -176,6 +193,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
         temp_dir = AudioProcessor.temp_dir
         success = False
 
+        # generate video
         if generator == "mp":
             VideoGenerator = video_generator_mp.VideoGenerator(audio_file)
             for segment in words:
@@ -190,7 +208,9 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
             for segment in words:
                 VideoGenerator.add_words(segment)
             VideoGenerator.save(temp_dir)
-            VideoGenerator.render_video(output, audio_file)
+            VideoGenerator.render_video(
+                output, audio_file, (background if background else None)
+            )
             click.secho("Video created using pysubs2 + ffmpeg.", fg="green")
             success = True
         elif generator == "ts":
@@ -207,6 +227,7 @@ def generate(audio_file, lyrics_file, output, model_size, device, generator, no_
         else:
             click.secho("One or more errors occurred during processing.", fg="red")
 
+        # cleanup
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
 

@@ -66,7 +66,9 @@ class AudioProcessor:
 
     def isolate_vocals(self):
         wav = AudioFile(Path(self.audio_file)).read(
-            streams=0, samplerate=self.demucs_model.samplerate, channels=self.demucs_model.audio_channels
+            streams=0,
+            samplerate=self.demucs_model.samplerate,
+            channels=self.demucs_model.audio_channels,
         )
         wav = wav.float().unsqueeze(0).to(self.device)
 

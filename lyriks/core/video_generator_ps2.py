@@ -10,7 +10,7 @@ from . import ffmpeg
 class VideoGenerator:
     def __init__(
         self,
-        fontname="Comic Sans",
+        fontname="Comic Sans MS",
         fontsize=28,
         primarycolor=(255, 255, 255, 0),
         highlightcolor=(0, 255, 0, 0),
@@ -37,8 +37,12 @@ class VideoGenerator:
         words = segment["words"]
         if not words:
             return
-        if words and isinstance(words[0], list):
+
+        if isinstance(words[0], tuple):
             words = [{"start": w[0], "end": w[1], "word": w[2]} for w in words]
+        elif isinstance(words[0], list):
+            words = [{"start": w[0], "end": w[1], "word": w[2]} for w in words]
+
         full_text = " ".join([w["word"] for w in words])
 
         # add white text
@@ -89,7 +93,15 @@ class VideoGenerator:
         self.subs.save(self.filename)
         return self.filename
 
-    def render_video(self, output_file_name, audio_file=None, size="1920x1080", fps=30, duration=60):
+    def render_video(
+        self,
+        output_file_name,
+        audio_file=None,
+        size="1920x1080",
+        fps=60,
+        duration=60,
+        background_path=None,
+    ):
         if not hasattr(self, "filename"):
             print("Please save subtitles first.")
             return
@@ -114,23 +126,72 @@ class VideoGenerator:
                 click.secho(f"Error while retrieving audio details: {e}")
                 return
 
-        # render with subtitles
         temp_video = output_file_name + "_temp.mp4"
-        ffmpeg_cmd = [
-            "ffmpeg",
-            "-y",
-            "-f",
-            "lavfi",
-            "-i",
-            f"color=c=black:s={size}:d={duration}:r={fps}",
-            "-vf",
-            f"ass={self.filename}",
-            "-c:v",
-            "libx264",
-            "-pix_fmt",
-            "yuv420p",
-            temp_video,
-        ]
+
+        # cut background
+        if background_path:
+            bg_cmd = [
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+                str(background_path),
+            ]
+            bg_result = subprocess.run(
+                bg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            )
+            try:
+                bg_duration = float(bg_result.stdout.strip())
+            except Exception as e:
+                click.secho(
+                    f"Error while retrieving background video details: {e}", fg="red"
+                )
+                return
+
+            if bg_duration < duration:
+                click.secho(
+                    "Error: Background video must be at least as long as the audio.",
+                    fg="red",
+                )
+                return
+
+            ffmpeg_cmd = [
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(background_path),
+                "-t",
+                str(duration),  # cut background to audio length
+                "-vf",
+                f"ass={self.filename}",
+                "-c:v",
+                "libx264",
+                "-pix_fmt",
+                "yuv420p",
+                "-r",
+                str(fps),
+                temp_video,
+            ]
+        else:
+            ffmpeg_cmd = [
+                "ffmpeg",
+                "-y",
+                "-f",
+                "lavfi",
+                "-i",
+                f"color=c=black:s={size}:d={duration}:r={fps}",
+                "-vf",
+                f"ass={self.filename}",
+                "-c:v",
+                "libx264",
+                "-pix_fmt",
+                "yuv420p",
+                temp_video,
+            ]
+
         click.secho("Rendering video", fg="blue")
         ffmpeg.ffmpeg_progress(ffmpeg_cmd, duration)
 
@@ -155,7 +216,6 @@ class VideoGenerator:
             ]
             click.secho("Adding audio to video", fg="blue")
             ffmpeg.ffmpeg_progress(ffmpeg_mux_cmd, duration)
-            # remove temp video
             os.remove(temp_video)
         else:
             os.rename(temp_video, output_file_name + ".mp4")

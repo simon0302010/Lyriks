@@ -2,6 +2,7 @@ import json
 import os
 import time
 
+import click
 from google import genai
 from google.genai import types
 
@@ -95,11 +96,10 @@ MAKE 100% SURE THAT YOU HAVE TIMESTAMPS + CORRECT LYRICS AT THE END!
     try:
         result_json = json.loads(result_str)
         # print(json.dumps(result_json, indent=2, ensure_ascii=False))
+        click.secho(f"Gemini took: {round(time.time() - start_time, 2)}s", fg="green")
         return result_json
     except Exception as e:
         print("Failed to parse JSON:", e)
         print("Raw output:")
         print(result_str)
         return False
-
-    print(f"Took: {round(time.time() - start_time, 2)}s")
