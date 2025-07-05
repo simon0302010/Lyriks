@@ -5,6 +5,7 @@ import time
 import click
 from google import genai
 from google.genai import types
+from .spinner import Spinner
 
 
 def generate(whisper_transcript, lyrics):
@@ -14,25 +15,41 @@ def generate(whisper_transcript, lyrics):
 
     model = "gemini-1.5-flash"
     prompt = f"""
-Given the following Whisper transcript (with word-level timestamps) and the original song lyrics, generate a JSON array as described below.
+You are a forced aligner that must fix the Whisper transcript (word-level timestamps) to match the correct lyrics below.
 
-Whisper transcript:
+--- Context ---
+Whisper transcript (with possible errors):
 {whisper_transcript}
 
-Original lyrics:
+Correct lyrics:
 {lyrics}
+----------------
 
-Each JSON object should have:
-- "text": the lyric line or segment,
-- "words": an array of objects with "start", "end", and "word" from the transcript,
-- "start": start time of the segment (first word),
-- "end": end time of the segment (last word).
+You MUST:
+1. Use *all* word-level timestamps from the transcript (the "start" and "end" times for each word).  
+2. Output the correct lyrics text in the "text" field, precisely as in the reference lyrics, even if Whisper got them wrong.  
+3. If Whisper is missing words, replicate or expand the transcript's closest timestamps so the "words" array matches the correct lyrics text.  
+4. If Whisper has extra words not in the correct lyrics, remove or merge them, but preserve the rest of the timestamps.  
+5. Output valid JSON (no markdown) in the format:
+[
+  {{
+    "text": "...",
+    "words": [
+      {{"start": float, "end": float, "word": "..."}},
+      ...
+    ],
+    "start": float,
+    "end": float
+  }},
+  ...
+]
 
-Align each lyric line to the corresponding words and their timestamps. Output a valid JSON array following this schema.
-YOU HAVE TO IMPROVE BOTH THE WORDS AND TEXTS!
-NO MATTER HOW MESSED UP THE WHISPER TRANSCRIPT IS YOU ARE OBLIGATED TO USE THOSE TIMINGS AND THE CORRECT LYRICS!
-MAKE 100% SURE THAT YOU HAVE TIMESTAMPS + CORRECT LYRICS AT THE END!
+This JSON must reflect the correct lyrics text, but each word must be assigned a start/end time from the Whisper transcript. 
+If you must guess or merge timings, do so gracefully. 
+NEVER output invalid JSON. 
 """
+
+    system_prompt = "You are a forced aligner. Always follow the instructions exactly and output valid JSON as described."
 
     contents = [
         types.Content(
@@ -75,22 +92,28 @@ MAKE 100% SURE THAT YOU HAVE TIMESTAMPS + CORRECT LYRICS AT THE END!
             ),
         ),
         max_output_tokens=16384,
+        system_instruction=[
+            types.Part.from_text(text=system_prompt),
+        ],
     )
 
     start_time = time.time()
 
     # collect chunks
-    result_chunks = []
-    for chunk in client.models.generate_content_stream(
-        model=model,
-        contents=contents,
-        config=generate_content_config,
-    ):
-        if hasattr(chunk, "text"):
-            result_chunks.append(chunk.text)
-        elif hasattr(chunk, "data"):
-            result_chunks.append(chunk.data)
-    result_str = "".join(result_chunks).strip()
+    
+    click.secho("Fixing up lyrics...", fg="blue")
+    with Spinner():
+        result_chunks = []
+        for chunk in client.models.generate_content_stream(
+            model=model,
+            contents=contents,
+            config=generate_content_config,
+        ):
+            if hasattr(chunk, "text"):
+                result_chunks.append(chunk.text)
+            elif hasattr(chunk, "data"):
+                result_chunks.append(chunk.data)
+        result_str = "".join(result_chunks).strip()
 
     # parse json
     try:

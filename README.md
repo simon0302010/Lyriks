@@ -12,7 +12,7 @@
 
 # Lyriks
 
-Lyriks is an automated lyrics video generator. It transcribes the audio and automatically creates a video using MoviePy.
+Lyriks is an automated lyrics video generator. It transcribes audio and automatically creates a lyrics video using fast subtitle rendering (pysubs2+ffmpeg) or MoviePy.
 
 ---
 
@@ -20,7 +20,8 @@ Lyriks is an automated lyrics video generator. It transcribes the audio and auto
 
 - **Automatic vocal separation** using [Demucs](https://github.com/facebookresearch/demucs)
 - **Transcription** with [OpenAI Whisper](https://github.com/openai/whisper) and [whisper-timestamped](https://github.com/linto-ai/whisper-timestamped)
-- **Synchronized lyrics video** generation with [MoviePy](https://zulko.github.io/moviepy/)
+- **Fast, high-quality video rendering** with pysubs2 + FFmpeg
+- **Synchronized lyrics video** generation with [MoviePy](https://zulko.github.io/moviepy/) (legacy)
 - **ASS subtitle generation** with [pysubs2](https://github.com/tkarabela/pysubs2)
 - **Fast video rendering** using [FFmpeg](https://ffmpeg.org/)
 
@@ -28,7 +29,7 @@ Lyriks is an automated lyrics video generator. It transcribes the audio and auto
 
 ## Requirements
 
-- Linux (Windows support is experimental)
+- Linux (Windows support is experimental; macOS hasn't been tested yet)
 - An NVIDIA GPU (recommended for best performance; CPU is supported but slower)
 - 10GB of free disk space
 - Python 3.11
@@ -103,9 +104,13 @@ You will be interactively prompted in the CLI for any options you leave unspecif
 - `--generator`, `-g`  
   Which backend to use for video generation.  
   *Options:*
-    - `ps2`: pysubs2 + ffmpeg (fast, good quality, experimental, ~180 fps)
+    - `ps2`: pysubs2 + ffmpeg (fast, good quality, experimental, ~60 fps)
     - `mp`: MoviePy (slow, low quality, legacy, ~10 fps)
     - `ts`: Only save transcript (for debugging)
+
+- `--background`, `-b`  
+  Optional background **video** file for the video (must be a video the same length or longer than the audio).  
+  *Example:* `-b my_background.mp4`
 
 - `--no-gemini`  
   Disable Gemini improvements for Whisper output.  
@@ -115,7 +120,7 @@ You will be interactively prompted in the CLI for any options you leave unspecif
 ### Example
 
 ```bash
-python -m lyriks generate path/to/song.mp3 path/to/lyrics.txt -m small -d cuda -o output_video
+python -m lyriks generate path/to/song.mp3 path/to/lyrics.txt -m small -d cuda -o output_video -b background.mp4
 ```
 
 Note: This process can take up to 5 minutes on lower end hardware.

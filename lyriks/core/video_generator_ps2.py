@@ -192,7 +192,7 @@ class VideoGenerator:
                 temp_video,
             ]
 
-        click.secho("Rendering video", fg="blue")
+        click.secho("Rendering video...", fg="blue")
         ffmpeg.ffmpeg_progress(ffmpeg_cmd, duration)
 
         # mix audio and video
@@ -214,7 +214,7 @@ class VideoGenerator:
                 "-shortest",
                 final_output,
             ]
-            click.secho("Adding audio to video", fg="blue")
+            click.secho("Adding audio to video...", fg="blue")
             ffmpeg.ffmpeg_progress(ffmpeg_mux_cmd, duration)
             os.remove(temp_video)
         else:

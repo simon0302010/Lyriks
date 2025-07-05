@@ -9,6 +9,7 @@ import questionary
 from questionary import Style
 
 from .core import gemini, video_generator_mp, video_generator_ps2
+from .core.spinner import Spinner
 
 questionary_style = Style([("pointer", "fg:cyan bold")])
 
@@ -149,6 +150,7 @@ def generate(
             stdout_buffer = io.StringIO()
             stderr_buffer = io.StringIO()
 
+            click.secho("Processing audio...", fg="blue")
             with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
                 vocals_path = AudioProcessor.isolate_vocals()
                 silent_parts, no_silence_file = AudioProcessor.remove_silence()
@@ -209,7 +211,7 @@ def generate(
                 VideoGenerator.add_words(segment)
             VideoGenerator.save(temp_dir)
             VideoGenerator.render_video(
-                output, audio_file, (background if background else None)
+                output_file_name=output, audio_file=audio_file, background_path=background
             )
             click.secho("Video created using pysubs2 + ffmpeg.", fg="green")
             success = True

@@ -18,7 +18,9 @@ def ffmpeg_progress(cmd, total_duration):
         bar_format="{l_bar}{bar}| {n:.1f}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}{postfix}]",
     )
     last_time = 0
+    lines = []
     for line in process.stderr:
+        lines.append(line)
         match_time = re.search(r"time=(\d+:\d+:\d+\.\d+)", line)
         match_fps = re.search(r"fps=\s*([\d.]+)", line)
         if match_time:
@@ -32,4 +34,5 @@ def ffmpeg_progress(cmd, total_duration):
             except ValueError:
                 pass
     pbar.close()
+    #print("".join(lines))
     process.wait()
