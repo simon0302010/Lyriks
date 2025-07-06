@@ -44,7 +44,7 @@ class VideoGenerator:
         elif isinstance(words[0], list):
             words = [{"start": w[0], "end": w[1], "word": w[2]} for w in words]
 
-        #full_text = " ".join([w["word"] for w in words])
+        # full_text = " ".join([w["word"] for w in words])
 
         # karaoke highlighting
         ass_text = ""

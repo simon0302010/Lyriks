@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lyriks-video"
-version = "0.5.1"
+version = "0.5.2"
 description = "Automated lyrics video generator"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
@@ -40,5 +40,5 @@ Homepage = "https://github.com/simon0302010/Lyriks"
 [tool.setuptools]
 include-package-data = true
 
-[tool.setuptools.package-data]
-"lyriks.templates" = ["video.mp4"]
+# [tool.setuptools.package-data]
+# "lyriks.templates" = ["video.mp4"]

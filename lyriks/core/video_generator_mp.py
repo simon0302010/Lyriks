@@ -1,8 +1,12 @@
-from pathlib import Path
-
 import click
 from matplotlib import font_manager
-from moviepy import AudioFileClip, CompositeVideoClip, TextClip, VideoFileClip
+from moviepy import (
+    AudioFileClip,
+    ColorClip,
+    CompositeVideoClip,
+    TextClip,
+    VideoFileClip,
+)
 from PIL import ImageFont
 
 
@@ -12,14 +16,24 @@ class VideoGenerator:
         self.audio_duration = round(self.audio.duration, 2)
         click.secho(f"Audio Duration: {self.audio_duration} seconds", fg="green")
         if clip_path is None:
-            clip_path = Path(__file__).parent.parent / "templates" / "video.mp4"
-            clip_path = clip_path.resolve()
-        if duration is not None:
-            self.clip = VideoFileClip(str(clip_path)).subclipped(0, int(duration))
-            self.audio = self.audio.subclipped(0, int(duration))
+            width, height = 1920, 1080
+            if duration is not None:
+                clip_duration = int(duration)
+            else:
+                clip_duration = self.audio_duration
+            self.clip = ColorClip(
+                size=(width, height), color=(0, 0, 0), duration=clip_duration
+            )
+            self.audio = self.audio.subclipped(0, clip_duration)
         else:
-            self.clip = VideoFileClip(str(clip_path)).subclipped(0, self.audio_duration)
-            self.audio = self.audio.subclipped(0, self.audio_duration)
+            if duration is not None:
+                self.clip = VideoFileClip(str(clip_path)).subclipped(0, int(duration))
+                self.audio = self.audio.subclipped(0, int(duration))
+            else:
+                self.clip = VideoFileClip(str(clip_path)).subclipped(
+                    0, self.audio_duration
+                )
+                self.audio = self.audio.subclipped(0, self.audio_duration)
         self.video_width = self.clip.w
         self.video_height = self.clip.h
         self.font_path = font_manager.findfont("DejaVu Sans")

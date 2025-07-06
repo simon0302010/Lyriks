@@ -196,7 +196,9 @@ def generate(
 
         # generate video
         if generator == "mp":
-            VideoGenerator = video_generator_mp.VideoGenerator(audio_file)
+            VideoGenerator = video_generator_mp.VideoGenerator(
+                audio_file, clip_path=background
+            )
             for segment in words:
                 VideoGenerator.add_text(
                     segment["text"], segment["start"], segment["end"]
