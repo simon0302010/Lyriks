@@ -136,6 +136,8 @@ Note: This process can take up to 5 minutes on lower end hardware.
 - Libary of procedually generated backgrounds
 - Batch processing
 - Automatic upload to YouTube
+- Config file for video style
+- Config file generator function
 
 ---
 
