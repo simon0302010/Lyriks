@@ -37,8 +37,8 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/simon0302010/Lyriks"
 
-[tool.setuptools]
-include-package-data = true
+# [tool.setuptools]
+# include-package-data = true
 
 # [tool.setuptools.package-data]
 # "lyriks.templates" = ["video.mp4"]
