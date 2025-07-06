@@ -102,7 +102,7 @@ NEVER output invalid JSON.
 
     # collect chunks
 
-    click.secho("Fixing up lyrics...", fg="blue")
+    click.secho("Fixing up lyrics... (This may take up to 5 minutes)", fg="blue")
     result_str = ""
     try:
         with Spinner():
@@ -116,7 +116,7 @@ NEVER output invalid JSON.
                     result_chunks.append(chunk.text)
                 elif hasattr(chunk, "data"):
                     result_chunks.append(chunk.data)
-            result_str = "".join(result_chunks).strip()
+            result_str = "".join([str(chunk) for chunk in result_chunks if chunk is not None]).strip()
     except Exception as e:
         click.secho(f"Error during Gemini API call: {e}", fg="red")
         return False
@@ -130,7 +130,7 @@ NEVER output invalid JSON.
     try:
         result_json = json.loads(result_str)
         # print(json.dumps(result_json, indent=2, ensure_ascii=False))
-        click.secho(f"Gemini took: {round(time.time() - start_time, 2)}s", fg="green")
+        click.secho(f"Gemini took: {round(time.time() - start_time, 2)}s", fg="blue")
         return result_json
     except json.JSONDecodeError as e:
         click.secho(f"Failed to parse JSON from Gemini: {e}", fg="red")

@@ -115,6 +115,10 @@ You will be interactively prompted in the CLI for any options you leave unspecif
 - `--no-gemini`  
   Disable Gemini improvements for Whisper output.  
 
+- `--karaoke`, `-k`  
+  Generate a karaoke-style video (music only, vocals removed).  
+  When this option is enabled, Lyriks will automatically separate the vocals from the music using Demucs and use the instrumental (music without vocals) as the audio track for the generated video.
+
 ---
 
 ### Example
@@ -129,12 +133,8 @@ Note: This process can take up to 5 minutes on lower end hardware.
 
 ## TODO
 
-- Fancier video styles and effects
-- Ask which background to use
 - Libary of procedually generated backgrounds
 - Batch processing
-- Loading bars
-- Karaoke function
 - Automatic upload to YouTube
 
 ---

@@ -45,6 +45,7 @@ def main():
     default=None,
     type=click.Path(exists=True, path_type=Path),
 )
+@click.option("--karaoke", "-k", help="Use this if you want the video to not have vocals.", is_flag=True)
 def generate(
     audio_file,
     lyrics_file,
@@ -54,6 +55,7 @@ def generate(
     generator,
     no_gemini,
     background,
+    karaoke
 ):
     import io
     from contextlib import redirect_stderr, redirect_stdout
@@ -63,6 +65,10 @@ def generate(
     try:
         audio_name = Path(audio_file).stem
         is_interactive = sys.stdin.isatty()
+
+        if not no_gemini and not os.environ.get("GEMINI_API_KEY"):
+            click.secho("GEMINI_API_KEY environment variable not set.", fg="red")
+            sys.exit(1)
 
         if not model_size:
             if is_interactive:
@@ -131,16 +137,40 @@ def generate(
                 click.secho("You must specify a video generator backend.", fg="red")
                 sys.exit(1)
 
+        if not background and is_interactive:
+            use_background = questionary.confirm(
+                "Do you want to use a background video for the lyrics video?", default=False
+            ).ask()
+            if use_background:
+                while True:
+                    background_str = questionary.path(
+                        "Select a background video file (must match or exceed song length):"
+                    ).ask()
+                    if not background_str:
+                        click.secho("No background video selected. Skipping.", fg="yellow")
+                        background = None
+                        break
+                    background_path = Path(background_str)
+                    if not background_path.exists():
+                        click.secho("File does not exist. Please select a valid file.", fg="red")
+                        continue
+                    if background_path.suffix.lower() not in [".mp4", ".mov", ".mkv", ".avi", ".webm"]:
+                        click.secho("Please select a valid video file (mp4, mov, mkv, avi, webm).", fg="red")
+                        continue
+                    background = background_path
+                    break
+
         if not no_gemini and is_interactive:
             enable_gemini = questionary.confirm(
                 "Enable Gemini improvements for Whisper output?"
             ).ask()
             no_gemini = not enable_gemini
-
-        if not no_gemini and not os.environ.get("GEMINI_API_KEY"):
-            click.secho("GEMINI_API_KEY environment variable not set.", fg="red")
-            sys.exit(1)
-
+                
+        if not karaoke and is_interactive:
+            karaoke = questionary.confirm(
+                "Remove vocals for karaoke-style video (music only)?", default=False
+            ).ask()
+        
         AudioProcessor = audio_processor.AudioProcessor(
             audio_file, lyrics_file, model_size, device
         )
@@ -152,7 +182,7 @@ def generate(
 
             click.secho("Processing audio...", fg="blue")
             with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
-                vocals_path = AudioProcessor.isolate_vocals()
+                vocals_path, music_path = AudioProcessor.isolate_vocals()
                 silent_parts, no_silence_file = AudioProcessor.remove_silence()
                 transcript, words = AudioProcessor.transcribe()
 
@@ -162,7 +192,7 @@ def generate(
             if stdout_output.strip():
                 click.secho(stdout_output.strip(), fg="white")
             if stderr_output.strip():
-                click.secho(stderr_output.strip(), fg="yellow")
+                click.secho(stderr_output.strip(), fg="white")
 
             if (
                 "Got start time outside of audio boundary" in stdout_output
@@ -176,6 +206,7 @@ def generate(
                 break
 
         click.secho(f"Vocals path: {str(vocals_path)}", fg="blue")
+        click.secho(f"Instrumental path: {str(music_path)}", fg="blue")
         click.secho(f"No-silence audio: {str(no_silence_file)}", fg="blue")
 
         words = AudioProcessor.map_words_to_original()
@@ -185,7 +216,7 @@ def generate(
                 words = gemini_output
                 click.secho("Gemini succeeded.", fg="green")
             else:
-                click.secho("Gemini failed, using original Lyrics", fg="yellow")
+                click.secho("Gemini failed, using original lyrics. See above for details.", fg="yellow")
 
         if os.path.exists(vocals_path):
             os.remove(vocals_path)
@@ -198,7 +229,7 @@ def generate(
         # generate video
         if generator == "mp":
             VideoGenerator = video_generator_mp.VideoGenerator(
-                audio_file, clip_path=background
+                (audio_file if not karaoke else music_path), clip_path=background
             )
             for segment in words:
                 VideoGenerator.add_text(
@@ -214,7 +245,7 @@ def generate(
             VideoGenerator.save(temp_dir)
             VideoGenerator.render_video(
                 output_file_name=output,
-                audio_file=audio_file,
+                audio_file=(audio_file if not karaoke else music_path),
                 background_path=background,
             )
             click.secho("Video created using pysubs2 + ffmpeg.", fg="green")

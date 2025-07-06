@@ -99,10 +99,16 @@ class AudioProcessor:
             vocals_idx = self.demucs_model.sources.index("vocals")
             vocals = sources[vocals_idx].detach().cpu().numpy().T
 
-            self.vocals_file = str(self.temp_dir / "vocals.wav")
-            sf.write(self.vocals_file, vocals, self.demucs_model.samplerate)
+            instrumental = sum(
+                sources[i] for i in range(len(self.demucs_model.sources)) if i != vocals_idx
+            ).detach().cpu().numpy().T
 
-            return self.vocals_file
+            self.vocals_file = str(self.temp_dir / "vocals.wav")
+            self.instrumental_file = str(self.temp_dir / "music_only.wav")
+            sf.write(self.vocals_file, vocals, self.demucs_model.samplerate)
+            sf.write(self.instrumental_file, instrumental, self.demucs_model.samplerate)
+
+            return self.vocals_file, self.instrumental_file
         except Exception as e:
             click.secho(f"Error isolating vocals: {e}", fg="red")
             raise
