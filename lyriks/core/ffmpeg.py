@@ -11,16 +11,18 @@ def parse_time(timestr):
 
 
 def ffmpeg_progress(cmd, total_duration):
-    process = subprocess.Popen(cmd, stderr=subprocess.PIPE, universal_newlines=True)
+    process = subprocess.Popen(
+        cmd, stderr=subprocess.PIPE, universal_newlines=True, text=True
+    )
     pbar = tqdm(
         total=total_duration,
         unit="s",
         bar_format="{l_bar}{bar}| {n:.1f}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}{postfix}]",
     )
     last_time = 0
-    lines = []
+    stderr_output = []
     for line in process.stderr:
-        lines.append(line)
+        stderr_output.append(line)
         match_time = re.search(r"time=(\d+:\d+:\d+\.\d+)", line)
         match_fps = re.search(r"fps=\s*([\d.]+)", line)
         if match_time:
@@ -34,5 +36,8 @@ def ffmpeg_progress(cmd, total_duration):
             except ValueError:
                 pass
     pbar.close()
-    # print("".join(lines))
     process.wait()
+    if process.returncode != 0:
+        raise subprocess.CalledProcessError(
+            process.returncode, cmd, output=None, stderr="".join(stderr_output)
+        )

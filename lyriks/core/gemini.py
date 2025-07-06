@@ -103,18 +103,26 @@ NEVER output invalid JSON.
     # collect chunks
 
     click.secho("Fixing up lyrics...", fg="blue")
-    with Spinner():
-        result_chunks = []
-        for chunk in client.models.generate_content_stream(
-            model=model,
-            contents=contents,
-            config=generate_content_config,
-        ):
-            if hasattr(chunk, "text"):
-                result_chunks.append(chunk.text)
-            elif hasattr(chunk, "data"):
-                result_chunks.append(chunk.data)
-        result_str = "".join(result_chunks).strip()
+    result_str = ""
+    try:
+        with Spinner():
+            result_chunks = []
+            for chunk in client.models.generate_content_stream(
+                model=model,
+                contents=contents,
+                config=generate_content_config,
+            ):
+                if hasattr(chunk, "text"):
+                    result_chunks.append(chunk.text)
+                elif hasattr(chunk, "data"):
+                    result_chunks.append(chunk.data)
+            result_str = "".join(result_chunks).strip()
+    except types.generation_types.BlockedPromptError as e:
+        click.secho(f"Gemini API request blocked: {e}", fg="red")
+        return False
+    except Exception as e:
+        click.secho(f"Error during Gemini API call: {e}", fg="red")
+        return False
 
     # parse json
     try:
@@ -122,8 +130,13 @@ NEVER output invalid JSON.
         # print(json.dumps(result_json, indent=2, ensure_ascii=False))
         click.secho(f"Gemini took: {round(time.time() - start_time, 2)}s", fg="green")
         return result_json
+    except json.JSONDecodeError as e:
+        click.secho(f"Failed to parse JSON from Gemini: {e}", fg="red")
+        click.secho("Raw output:", fg="yellow")
+        click.secho(result_str, fg="yellow")
+        return False
     except Exception as e:
-        print("Failed to parse JSON:", e)
-        print("Raw output:")
-        print(result_str)
+        click.secho(f"An unexpected error occurred during JSON parsing: {e}", fg="red")
+        click.secho("Raw output:", fg="yellow")
+        click.secho(result_str, fg="yellow")
         return False

@@ -110,6 +110,9 @@ class AudioProcessor:
         non_silent = energies > silence_thresh
         non_silent_indices = np.where(non_silent)[0]
 
+        if not len(non_silent_indices):
+            return [], None
+
         self.non_silent_parts = []
         if len(non_silent_indices) > 0:
             start = non_silent_indices[0]

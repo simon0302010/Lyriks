@@ -80,122 +80,158 @@ class VideoGenerator:
         duration=60,
         background_path=None,
     ):
-        if not hasattr(self, "filename"):
-            print("Please save subtitles first.")
-            return
-        if audio_file:
-            # use ffprobe to get audio duration
-            cmd = [
-                "ffprobe",
-                "-v",
-                "error",
-                "-show_entries",
-                "format=duration",
-                "-of",
-                "default=noprint_wrappers=1:nokey=1",
-                str(audio_file),
-            ]
-            result = subprocess.run(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-            )
-            try:
-                duration = round(float(result.stdout.strip()), 1)
-            except Exception as e:
-                click.secho(f"Error while retrieving audio details: {e}")
-                return
+        if not self.filename:
+            click.secho("Please save subtitles first.", fg="red")
+            return False
 
         temp_video = output_file_name + "_temp.mp4"
 
-        fade_filter = f"fade=t=in:st=0:d=1,fade=t=out:st={duration-1}:d=1"
+        try:
+            if audio_file:
+                cmd = [
+                    "ffprobe",
+                    "-v",
+                    "error",
+                    "-show_entries",
+                    "format=duration",
+                    "-of",
+                    "default=noprint_wrappers=1:nokey=1",
+                    str(audio_file),
+                ]
+                try:
+                    result = subprocess.run(
+                        cmd,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        check=True,
+                    )
+                    duration = round(float(result.stdout.strip()), 1)
+                except subprocess.CalledProcessError as e:
+                    click.secho(
+                        f"Error getting audio duration with ffprobe:\n{e.stderr}",
+                        fg="red",
+                    )
+                    return False
+                except (ValueError, IndexError) as e:
+                    click.secho(f"Error parsing audio duration: {e}", fg="red")
+                    return False
 
-        # cut background
-        if background_path:
-            bg_cmd = [
-                "ffprobe",
-                "-v",
-                "error",
-                "-show_entries",
-                "format=duration",
-                "-of",
-                "default=noprint_wrappers=1:nokey=1",
-                str(background_path),
-            ]
-            bg_result = subprocess.run(
-                bg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            fade_filter = f"fade=t=in:st=0:d=1,fade=t=out:st={duration-1}:d=1"
+
+            if background_path:
+                bg_cmd = [
+                    "ffprobe",
+                    "-v",
+                    "error",
+                    "-show_entries",
+                    "format=duration",
+                    "-of",
+                    "default=noprint_wrappers=1:nokey=1",
+                    str(background_path),
+                ]
+                try:
+                    bg_result = subprocess.run(
+                        bg_cmd,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        check=True,
+                    )
+                    bg_duration = float(bg_result.stdout.strip())
+                except subprocess.CalledProcessError as e:
+                    click.secho(
+                        f"Error getting background video duration:\n{e.stderr}",
+                        fg="red",
+                    )
+                    return False
+                except (ValueError, IndexError) as e:
+                    click.secho(
+                        f"Error parsing background video duration: {e}", fg="red"
+                    )
+                    return False
+
+                if bg_duration < duration:
+                    click.secho(
+                        "Error: Background video must be at least as long as the audio.",
+                        fg="red",
+                    )
+                    return False
+
+                ffmpeg_cmd = [
+                    "ffmpeg",
+                    "-y",
+                    "-i",
+                    str(background_path),
+                    "-t",
+                    str(duration),  # cut background to audio length
+                    "-vf",
+                    f"{fade_filter},ass={self.filename}",
+                    "-c:v",
+                    "libx264",
+                    "-pix_fmt",
+                    "yuv420p",
+                    "-r",
+                    str(fps),
+                    temp_video,
+                ]
+            else:
+                ffmpeg_cmd = [
+                    "ffmpeg",
+                    "-y",
+                    "-f",
+                    "lavfi",
+                    "-i",
+                    f"color=c=black:s={size}:d={duration}:r={fps}",
+                    "-vf",
+                    f"{fade_filter},ass={self.filename}",
+                    "-c:v",
+                    "libx264",
+                    "-pix_fmt",
+                    "yuv420p",
+                    temp_video,
+                ]
+
+            click.secho("Rendering video...", fg="blue")
+            ffmpeg.ffmpeg_progress(ffmpeg_cmd, duration)
+
+            # mix audio and video
+            if audio_file:
+                final_output = output_file_name + ".mp4"
+                ffmpeg_mux_cmd = [
+                    "ffmpeg",
+                    "-y",
+                    "-i",
+                    temp_video,
+                    "-i",
+                    str(audio_file),
+                    "-c:v",
+                    "copy",
+                    "-c:a",
+                    "aac",
+                    "-b:a",
+                    "192k",
+                    "-shortest",
+                    final_output,
+                ]
+                click.secho("Adding audio to video...", fg="blue")
+                ffmpeg.ffmpeg_progress(ffmpeg_mux_cmd, duration)
+            else:
+                os.rename(temp_video, output_file_name + ".mp4")
+
+            return True
+
+        except subprocess.CalledProcessError as e:
+            click.secho(
+                f"ffmpeg command failed with exit code {e.returncode}", fg="red"
             )
-            try:
-                bg_duration = float(bg_result.stdout.strip())
-            except Exception as e:
-                click.secho(
-                    f"Error while retrieving background video details: {e}", fg="red"
-                )
-                return
-
-            if bg_duration < duration:
-                click.secho(
-                    "Error: Background video must be at least as long as the audio.",
-                    fg="red",
-                )
-                return
-
-            ffmpeg_cmd = [
-                "ffmpeg",
-                "-y",
-                "-i",
-                str(background_path),
-                "-t",
-                str(duration),  # cut background to audio length
-                "-vf",
-                f"{fade_filter},ass={self.filename}",
-                "-c:v",
-                "libx264",
-                "-pix_fmt",
-                "yuv420p",
-                "-r",
-                str(fps),
-                temp_video,
-            ]
-        else:
-            ffmpeg_cmd = [
-                "ffmpeg",
-                "-y",
-                "-f",
-                "lavfi",
-                "-i",
-                f"color=c=black:s={size}:d={duration}:r={fps}",
-                "-vf",
-                f"{fade_filter},ass={self.filename}",
-                "-c:v",
-                "libx264",
-                "-pix_fmt",
-                "yuv420p",
-                temp_video,
-            ]
-
-        click.secho("Rendering video...", fg="blue")
-        ffmpeg.ffmpeg_progress(ffmpeg_cmd, duration)
-
-        # mix audio and video
-        if audio_file:
-            final_output = output_file_name + ".mp4"
-            ffmpeg_mux_cmd = [
-                "ffmpeg",
-                "-y",
-                "-i",
-                temp_video,
-                "-i",
-                str(audio_file),
-                "-c:v",
-                "copy",
-                "-c:a",
-                "aac",
-                "-b:a",
-                "192k",
-                "-shortest",
-                final_output,
-            ]
-            click.secho("Adding audio to video...", fg="blue")
-            ffmpeg.ffmpeg_progress(ffmpeg_mux_cmd, duration)
-            os.remove(temp_video)
-        else:
-            os.rename(temp_video, output_file_name + ".mp4")
+            click.secho(f"Stderr:\n{e.stderr}", fg="yellow")
+            return False
+        except Exception as e:
+            click.secho(
+                f"An unexpected error occurred during video rendering: {e}", fg="red"
+            )
+            return False
+        finally:
+            if os.path.exists(temp_video):
+                os.remove(temp_video)
