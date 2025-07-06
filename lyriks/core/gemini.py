@@ -14,7 +14,7 @@ def generate(whisper_transcript, lyrics):
         api_key=os.environ.get("GEMINI_API_KEY"),
     )
 
-    model = "gemini-1.5-flash"
+    model = "gemini-2.5-flash"
     prompt = f"""
 You are a forced aligner that must fix the Whisper transcript (word-level timestamps) to match the correct lyrics below.
 
@@ -92,7 +92,7 @@ NEVER output invalid JSON.
                 required=["text", "words", "start", "end"],
             ),
         ),
-        max_output_tokens=16384,
+        max_output_tokens=65536,
         system_instruction=[
             types.Part.from_text(text=system_prompt),
         ],
@@ -117,11 +117,13 @@ NEVER output invalid JSON.
                 elif hasattr(chunk, "data"):
                     result_chunks.append(chunk.data)
             result_str = "".join(result_chunks).strip()
-    except types.generation_types.BlockedPromptError as e:
-        click.secho(f"Gemini API request blocked: {e}", fg="red")
-        return False
     except Exception as e:
         click.secho(f"Error during Gemini API call: {e}", fg="red")
+        return False
+
+    if not result_str.endswith("]"):
+        click.secho("Gemini returned invalid JSON. This might indicate the song is too long.", fg="red")
+        click.secho(f"Response length: {len(result_str)} characters", fg="yellow")
         return False
 
     # parse json

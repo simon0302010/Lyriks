@@ -132,9 +132,10 @@ def generate(
                 sys.exit(1)
 
         if not no_gemini and is_interactive:
-            no_gemini = questionary.confirm(
-                "Disable Gemini improvements for Whisper output?", default=False
+            enable_gemini = questionary.confirm(
+                "Enable Gemini improvements for Whisper output?"
             ).ask()
+            no_gemini = not enable_gemini
 
         if not no_gemini and not os.environ.get("GEMINI_API_KEY"):
             click.secho("GEMINI_API_KEY environment variable not set.", fg="red")
