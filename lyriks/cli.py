@@ -45,7 +45,12 @@ def main():
     default=None,
     type=click.Path(exists=True, path_type=Path),
 )
-@click.option("--karaoke", "-k", help="Use this if you want the video to not have vocals.", is_flag=True)
+@click.option(
+    "--karaoke",
+    "-k",
+    help="Use this if you want the video to not have vocals.",
+    is_flag=True,
+)
 def generate(
     audio_file,
     lyrics_file,
@@ -55,7 +60,7 @@ def generate(
     generator,
     no_gemini,
     background,
-    karaoke
+    karaoke,
 ):
     import io
     from contextlib import redirect_stderr, redirect_stdout
@@ -139,7 +144,8 @@ def generate(
 
         if not background and is_interactive:
             use_background = questionary.confirm(
-                "Do you want to use a background video for the lyrics video?", default=False
+                "Do you want to use a background video for the lyrics video?",
+                default=False,
             ).ask()
             if use_background:
                 while True:
@@ -147,15 +153,28 @@ def generate(
                         "Select a background video file (must match or exceed song length):"
                     ).ask()
                     if not background_str:
-                        click.secho("No background video selected. Skipping.", fg="yellow")
+                        click.secho(
+                            "No background video selected. Skipping.", fg="yellow"
+                        )
                         background = None
                         break
                     background_path = Path(background_str)
                     if not background_path.exists():
-                        click.secho("File does not exist. Please select a valid file.", fg="red")
+                        click.secho(
+                            "File does not exist. Please select a valid file.", fg="red"
+                        )
                         continue
-                    if background_path.suffix.lower() not in [".mp4", ".mov", ".mkv", ".avi", ".webm"]:
-                        click.secho("Please select a valid video file (mp4, mov, mkv, avi, webm).", fg="red")
+                    if background_path.suffix.lower() not in [
+                        ".mp4",
+                        ".mov",
+                        ".mkv",
+                        ".avi",
+                        ".webm",
+                    ]:
+                        click.secho(
+                            "Please select a valid video file (mp4, mov, mkv, avi, webm).",
+                            fg="red",
+                        )
                         continue
                     background = background_path
                     break
@@ -165,12 +184,12 @@ def generate(
                 "Enable Gemini improvements for Whisper output?"
             ).ask()
             no_gemini = not enable_gemini
-                
+
         if not karaoke and is_interactive:
             karaoke = questionary.confirm(
                 "Remove vocals for karaoke-style video (music only)?", default=False
             ).ask()
-        
+
         AudioProcessor = audio_processor.AudioProcessor(
             audio_file, lyrics_file, model_size, device
         )
@@ -216,7 +235,10 @@ def generate(
                 words = gemini_output
                 click.secho("Gemini succeeded.", fg="green")
             else:
-                click.secho("Gemini failed, using original lyrics. See above for details.", fg="yellow")
+                click.secho(
+                    "Gemini failed, using original lyrics. See above for details.",
+                    fg="yellow",
+                )
 
         if os.path.exists(vocals_path):
             os.remove(vocals_path)

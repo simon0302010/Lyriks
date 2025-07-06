@@ -99,9 +99,17 @@ class AudioProcessor:
             vocals_idx = self.demucs_model.sources.index("vocals")
             vocals = sources[vocals_idx].detach().cpu().numpy().T
 
-            instrumental = sum(
-                sources[i] for i in range(len(self.demucs_model.sources)) if i != vocals_idx
-            ).detach().cpu().numpy().T
+            instrumental = (
+                sum(
+                    sources[i]
+                    for i in range(len(self.demucs_model.sources))
+                    if i != vocals_idx
+                )
+                .detach()
+                .cpu()
+                .numpy()
+                .T
+            )
 
             self.vocals_file = str(self.temp_dir / "vocals.wav")
             self.instrumental_file = str(self.temp_dir / "music_only.wav")

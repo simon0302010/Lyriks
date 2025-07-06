@@ -116,13 +116,18 @@ NEVER output invalid JSON.
                     result_chunks.append(chunk.text)
                 elif hasattr(chunk, "data"):
                     result_chunks.append(chunk.data)
-            result_str = "".join([str(chunk) for chunk in result_chunks if chunk is not None]).strip()
+            result_str = "".join(
+                [str(chunk) for chunk in result_chunks if chunk is not None]
+            ).strip()
     except Exception as e:
         click.secho(f"Error during Gemini API call: {e}", fg="red")
         return False
 
     if not result_str.endswith("]"):
-        click.secho("Gemini returned invalid JSON. This might indicate the song is too long.", fg="red")
+        click.secho(
+            "Gemini returned invalid JSON. This might indicate the song is too long.",
+            fg="red",
+        )
         click.secho(f"Response length: {len(result_str)} characters", fg="yellow")
         return False
 
