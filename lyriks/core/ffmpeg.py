@@ -34,5 +34,5 @@ def ffmpeg_progress(cmd, total_duration):
             except ValueError:
                 pass
     pbar.close()
-    #print("".join(lines))
+    # print("".join(lines))
     process.wait()

@@ -5,6 +5,7 @@ import time
 import click
 from google import genai
 from google.genai import types
+
 from .spinner import Spinner
 
 
@@ -100,7 +101,7 @@ NEVER output invalid JSON.
     start_time = time.time()
 
     # collect chunks
-    
+
     click.secho("Fixing up lyrics...", fg="blue")
     with Spinner():
         result_chunks = []

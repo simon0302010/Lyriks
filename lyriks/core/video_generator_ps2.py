@@ -12,7 +12,7 @@ class VideoGenerator:
         self,
         fontname="Comic Sans MS",
         fontsize=28,
-        primarycolor=(255, 255, 255, 0),
+        text_color=(255, 255, 255, 0),
         highlightcolor=(0, 255, 0, 0),
         outlinecolor=(0, 0, 0, 0),
         outline=2,
@@ -20,12 +20,13 @@ class VideoGenerator:
         alignment=pysubs2.Alignment.MIDDLE_CENTER,
     ):
         self.subs = pysubs2.SSAFile()
-        self.primarycolor = primarycolor
+        self.text_color = text_color
         self.highlightcolor = highlightcolor
         self.subs.styles["Default"] = pysubs2.SSAStyle(
             fontname=fontname,
             fontsize=fontsize,
-            primarycolor=pysubs2.Color(*primarycolor),
+            primarycolor=pysubs2.Color(*self.highlightcolor),
+            secondarycolor=pysubs2.Color(*self.text_color),
             outlinecolor=pysubs2.Color(*outlinecolor),
             outline=outline,
             shadow=shadow,
@@ -43,50 +44,27 @@ class VideoGenerator:
         elif isinstance(words[0], list):
             words = [{"start": w[0], "end": w[1], "word": w[2]} for w in words]
 
-        full_text = " ".join([w["word"] for w in words])
+        #full_text = " ".join([w["word"] for w in words])
 
-        # add white text
-        def add_white(start, end):
-            self.subs.append(
-                pysubs2.SSAEvent(
-                    start=int(start * 1000),
-                    end=int(end * 1000),
-                    text=r"{\c&HFFFFFF&}" + full_text,
-                    style=style,
-                )
-            )
-
-        # add white before first word
-        segment_start = words[0]["start"]
-        segment_end = words[-1]["end"]
-        if segment_start > segment["start"]:
-            add_white(segment["start"], segment_start)
-
-        # add white after last word
+        # karaoke highlighting
+        ass_text = ""
         for i, w in enumerate(words):
-            text = ""
-            for j, w2 in enumerate(words):
-                if i == j:
-                    text += r"{\c&H00FF00&}" + w2["word"]
-                else:
-                    text += r"{\c&HFFFFFF&}" + w2["word"]
-                if j != len(words) - 1:
-                    text += " "
-            self.subs.append(
-                pysubs2.SSAEvent(
-                    start=int(w["start"] * 1000),
-                    end=int(w["end"] * 1000),
-                    text=text,
-                    style=style,
-                )
-            )
+            duration_cs = int((w["end"] - w["start"]) * 100)
+            ass_text += f"{{\K{duration_cs}}}" + w["word"]
             if i < len(words) - 1:
-                gap_start = w["end"]
-                gap_end = words[i + 1]["start"]
-                if gap_end > gap_start:
-                    add_white(gap_start, gap_end)
-        if segment_end < segment["end"]:
-            add_white(segment_end, segment["end"])
+                ass_text += " "
+
+        fade_ms = 100
+        ass_text = r"{\fad(" + str(fade_ms) + "," + str(fade_ms) + ")}" + ass_text
+
+        self.subs.append(
+            pysubs2.SSAEvent(
+                start=int(segment["start"] * 1000),
+                end=int(segment["end"] * 1000),
+                text=ass_text,
+                style=style,
+            )
+        )
 
     def save(self, folder):
         self.filename = str(folder / "lyrics.ass")
@@ -128,6 +106,8 @@ class VideoGenerator:
 
         temp_video = output_file_name + "_temp.mp4"
 
+        fade_filter = f"fade=t=in:st=0:d=1,fade=t=out:st={duration-1}:d=1"
+
         # cut background
         if background_path:
             bg_cmd = [
@@ -166,7 +146,7 @@ class VideoGenerator:
                 "-t",
                 str(duration),  # cut background to audio length
                 "-vf",
-                f"ass={self.filename}",
+                f"{fade_filter},ass={self.filename}",
                 "-c:v",
                 "libx264",
                 "-pix_fmt",
@@ -184,7 +164,7 @@ class VideoGenerator:
                 "-i",
                 f"color=c=black:s={size}:d={duration}:r={fps}",
                 "-vf",
-                f"ass={self.filename}",
+                f"{fade_filter},ass={self.filename}",
                 "-c:v",
                 "libx264",
                 "-pix_fmt",
