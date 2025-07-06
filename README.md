@@ -130,7 +130,6 @@ Note: This process can take up to 5 minutes on lower end hardware.
 ## TODO
 
 - Fancier video styles and effects
-- Add more robust error handling
 - Ask which background to use
 - Libary of procedually generated backgrounds
 - Batch processing

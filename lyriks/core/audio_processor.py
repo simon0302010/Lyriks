@@ -11,6 +11,7 @@ from demucs.audio import AudioFile
 from demucs.pretrained import get_model
 from iso639 import Lang
 from langdetect import detect
+from langdetect.lang_detect_exception import LangDetectException
 
 
 class AudioProcessor:
@@ -20,31 +21,50 @@ class AudioProcessor:
         if isinstance(audio_file, bytes):
             audio_file = audio_file.decode()
         self.audio_file = str(audio_file)
-        with open(lyrics_file, "r") as f:
-            self.lyrics = f.read()
-        self.language = detect(self.lyrics)
-        click.secho(f"Detected language: {Lang(self.language).name}", fg="blue")
+        try:
+            with open(lyrics_file, "r", encoding="utf-8") as f:
+                self.lyrics = f.read()
+        except IOError as e:
+            click.secho(f"Error reading lyrics file: {e}", fg="red")
+            raise
+
+        try:
+            self.language = detect(self.lyrics)
+            click.secho(f"Detected language: {Lang(self.language).name}", fg="blue")
+        except LangDetectException:
+            self.language = None
+
         self.device = device
         self.model_size = model_size
         self.vocals_file = None
-        self.model = whisper.load_model(self.model_size, device=self.device)
         self.temp_dir = Path(tempfile.mkdtemp())
-        self.demucs_model = get_model("htdemucs").to(self.device)
-        self.demucs_model.eval()
+
+        try:
+            self.model = whisper.load_model(self.model_size, device=self.device)
+            self.demucs_model = get_model("htdemucs").to(self.device)
+            self.demucs_model.eval()
+        except Exception as e:
+            click.secho(f"Error loading AI models: {e}", fg="red")
+            raise
 
     def transcribe(self):
         # check which audios exist and choose one
         if hasattr(self, "no_silence_file") and self.no_silence_file:
-            audio = whisper.load_audio(self.no_silence_file)
+            audio_path = self.no_silence_file
             self.used_silence_removed = True
         elif self.vocals_file:
-            audio = whisper.load_audio(self.vocals_file)
+            audio_path = self.vocals_file
             self.used_silence_removed = False
         else:
-            audio = whisper.load_audio(self.audio_file)
+            audio_path = self.audio_file
             self.used_silence_removed = False
 
-        self.transcript = whisper.transcribe(self.model, audio, self.language)
+        try:
+            audio = whisper.load_audio(audio_path)
+            self.transcript = whisper.transcribe(self.model, audio, self.language)
+        except Exception as e:
+            click.secho(f"Error during transcription: {e}", fg="red")
+            raise
 
         self.words = []
         for segment in self.transcript["segments"]:
@@ -65,23 +85,27 @@ class AudioProcessor:
         return self.transcript, self.words
 
     def isolate_vocals(self):
-        wav = AudioFile(Path(self.audio_file)).read(
-            streams=0,
-            samplerate=self.demucs_model.samplerate,
-            channels=self.demucs_model.audio_channels,
-        )
-        wav = wav.float().unsqueeze(0).to(self.device)
+        try:
+            wav = AudioFile(Path(self.audio_file)).read(
+                streams=0,
+                samplerate=self.demucs_model.samplerate,
+                channels=self.demucs_model.audio_channels,
+            )
+            wav = wav.float().unsqueeze(0).to(self.device)
 
-        with torch.no_grad():
-            sources = apply_model(self.demucs_model, wav, device=self.device)[0]
+            with torch.no_grad():
+                sources = apply_model(self.demucs_model, wav, device=self.device)[0]
 
-        vocals_idx = self.demucs_model.sources.index("vocals")
-        vocals = sources[vocals_idx].detach().cpu().numpy().T
+            vocals_idx = self.demucs_model.sources.index("vocals")
+            vocals = sources[vocals_idx].detach().cpu().numpy().T
 
-        self.vocals_file = str(self.temp_dir / "vocals.wav")
-        sf.write(self.vocals_file, vocals, self.demucs_model.samplerate)
+            self.vocals_file = str(self.temp_dir / "vocals.wav")
+            sf.write(self.vocals_file, vocals, self.demucs_model.samplerate)
 
-        return self.vocals_file
+            return self.vocals_file
+        except Exception as e:
+            click.secho(f"Error isolating vocals: {e}", fg="red")
+            raise
 
     def remove_silence(
         self,
@@ -95,7 +119,12 @@ class AudioProcessor:
         else:
             audio_file = self.audio_file
 
-        audio_data, sr = sf.read(audio_file)
+        try:
+            audio_data, sr = sf.read(audio_file)
+        except Exception as e:
+            click.secho(f"Error reading audio file for silence removal: {e}", fg="red")
+            raise
+
         if len(audio_data.shape) > 1:
             audio_data = audio_data.mean(axis=1)
         self.total_duration = len(audio_data) / sr
@@ -111,7 +140,11 @@ class AudioProcessor:
         non_silent_indices = np.where(non_silent)[0]
 
         if not len(non_silent_indices):
-            return [], None
+            click.secho("Warning: Audio appears to be completely silent.", fg="yellow")
+            self.non_silent_parts = []
+            self.silent_parts = [(0.0, self.total_duration)]
+            self.no_silence_file = None
+            return self.silent_parts, self.no_silence_file
 
         self.non_silent_parts = []
         if len(non_silent_indices) > 0:

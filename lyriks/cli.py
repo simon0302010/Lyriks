@@ -234,11 +234,15 @@ def generate(
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
 
+    except FileNotFoundError as e:
+        click.secho(f"Error: File not found - {e}", fg="red")
+        sys.exit(1)
     except Exception as e:
         import traceback
 
-        click.secho(f"An error occurred: {e}", fg="red")
+        click.secho(f"An unexpected error occurred: {e}", fg="red")
         click.secho(traceback.format_exc(), fg="red")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
