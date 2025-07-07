@@ -1,9 +1,9 @@
 import json
 import os
-import shutil
-import sys
-import subprocess
 import platform
+import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 import click
@@ -15,6 +15,7 @@ from .core import gemini, video_generator_mp, video_generator_ps2
 questionary_style = Style([("pointer", "fg:cyan bold")])
 
 system = platform.system()
+
 
 @click.group()
 @click.version_option()
@@ -64,12 +65,18 @@ def generate(
     no_gemini,
     background,
     karaoke,
-):  
+):
     if system == "Darwin":
-        click.secho("Warning: Lyriks has not been fully tested on macOS. You may encounter bugs or unexpected behavior.", fg="yellow")
+        click.secho(
+            "Warning: Lyriks has not been fully tested on macOS. You may encounter bugs or unexpected behavior.",
+            fg="yellow",
+        )
     elif system == "Windows":
-        click.secho("Warning: Lyriks has not been fully tested on Windows. You may encounter bugs or unexpected behavior.", fg="yellow")
-    
+        click.secho(
+            "Warning: Lyriks has not been fully tested on Windows. You may encounter bugs or unexpected behavior.",
+            fg="yellow",
+        )
+
     import io
     from contextlib import redirect_stderr, redirect_stdout
 
@@ -301,22 +308,33 @@ def generate(
         # cleanup
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
-            
+
         click.secho(f"Video saved to {output}.mp4", fg="green")
-        
+
         if is_interactive:
             open_video = questionary.confirm("Open the video now?").ask()
             if open_video:
                 video_path = f"{output}.mp4"
                 try:
                     if system == "Darwin":
-                        subprocess.Popen(["open", video_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        subprocess.Popen(
+                            ["open", video_path],
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL,
+                        )
                     elif system == "Windows":
                         os.startfile(video_path)
                     elif system == "Linux":
-                        subprocess.Popen(["xdg-open", video_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        subprocess.Popen(
+                            ["xdg-open", video_path],
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL,
+                        )
                     else:
-                        click.secho("Unknown system, cannot open video automatically.", fg="yellow")
+                        click.secho(
+                            "Unknown system, cannot open video automatically.",
+                            fg="yellow",
+                        )
                         sys.exit(0)
                     click.secho("Opened video in default player.", fg="green")
                 except Exception as e:
