@@ -67,6 +67,25 @@ Then install Lyriks with pip:
 pip install lyriks-video
 ```
 
+### Gemini API Key
+
+Set your Gemini API key as an environment variable before running Lyriks:
+
+**Linux/macOS:**
+```bash
+export GEMINI_API_KEY="your-gemini-api-key"
+```
+
+**Windows (Command Prompt):**
+```cmd
+set GEMINI_API_KEY=your-gemini-api-key
+```
+
+**Windows (PowerShell):**
+```powershell
+$env:GEMINI_API_KEY="your-gemini-api-key"
+```
+
 ---
 
 ## Usage
